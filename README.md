@@ -1,11 +1,11 @@
 # python_libraries
 Contains the libraries I am using in my code
 
-##mymodule.py
+#mymodule.py
 
 test module
 
-##metadata_tools.py
+#metadata_tools.py
 
 contain all the basic info on the 200 individuals from Buri et al. 2015
 
@@ -32,4 +32,5 @@ used to extract genetic diversity and deal with vcfs
 
 #personal_bincommands
 Contains all my bin commands (bash and python), and it is added to my path. help is always available woth the "-h flag"
-	sortbig_bed_vcf.sh
+	sortbig_bed_vcf.sh ### sort a big bed or vcf file
+	faSplit ## split a fasta file into small files

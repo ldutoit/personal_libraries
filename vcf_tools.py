@@ -428,12 +428,14 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 		sum_pairwise = sum_pairwise_differences(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 		count_sites = count_sites_under_condition_vcf(vcf_allsites,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 	else:
+		print "enter 1"
 		sum_pairwise = sum_pairwise_differences(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 	if max_nsites >= count_sites[0]>=min_nsites  :
+		print "enter 2"
 		pi = sum_pairwise/count_sites[0]
 	else:
 		pi = "NA"
-	print "pi_double_vcf()",pi,count_sites[0],count_sites[1]
+	print "pi_double_vcf()",pi,"nsites_ok",count_sites[0],"win_len",count_sites[1] ,end-start
 	return [pi,count_sites[0],count_sites[1]] # pi, nsites passing condition, 
 
 def subsample_to_X_callable_sites(vcf_file,chrom,start,end,max_nsites,mincov,maxcov,inds,bgzip=True,nb_ind_with_min_cov="all"):

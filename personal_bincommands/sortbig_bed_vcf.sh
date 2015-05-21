@@ -33,5 +33,5 @@ if  [ -d temptosort ]; then rm -r temptosort ; fi
 mkdir temptosort 
 awk -F "\t" '{print > "temptosort/"$1".tosort"}' $infile
 for i in temptosort/*.tosort; do  echo $i ; sort -k2,2n $i > $i.s ; done
-cat temptosort/*.s>/dev/stdout	
+cat temptosort/*.s | grep -v ^temptosort >  /dev/stdout	
 rm -r temptosort
