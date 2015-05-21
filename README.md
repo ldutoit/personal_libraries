@@ -32,5 +32,5 @@ used to extract genetic diversity and deal with vcfs
 
 #personal_bincommands
 Contains all my bin commands (bash and python), and it is added to my path. help is always available woth the "-h flag"
-	sortbig_bed_vcf.sh ### sort a big bed or vcf file
-	faSplit ## split a fasta file into small files
+sortbig_bed_vcf.sh ### sort a big bed or vcf file
+faSplit ## split a fasta file into small files
