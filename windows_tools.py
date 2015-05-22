@@ -2,6 +2,7 @@
 # Filename: windows_tools.py
 import os,sys,vcf,pysam
 import numpy as np 
+import filecmp 
 	
 class WindowBed(object):
 	""" a class to define genomic interval, each object has to be defined by at least a seq and two of the three following parameters: start,end,len. 
@@ -136,19 +137,31 @@ class WindowBed(object):
 			raise Exception("invalid out arguments (choose 'bp'|'nb' | 'weighted_average')")
 
 	def write(self,filehandle,optional_list=[],allcols=True):
+		""" write a window to a filehandle,optional_list ist a list that will be appended to the window, allcols decide if all win.allcols is printed too as expanded columns
+		>>> win=WindowBed(seq="Chr1",start=10,end=20)
+		>>> output = open ("temp","w")
+		>>> win.write(output,optional_list =["test"],allcols = True) # should just contain test as there is no allcols
+		>>> win.write(output,allcols = False) ### just window
+		>>> win.allcols = ["col1",2] # extracols who are not necessarily strting
+		>>> win.write(output)
+		>>> output.close()
+		>>> filecmp.cmp("temp","test_files/windows_write.txt") #check that these test generate the same file that a precompiled file
+		True
+		>>> os.remove("temp")
+		"""
 		standard=[str(info) for info in [self.seq,self.start,self.end]]
-		if allcols==True: others = [str(info) for info in self.allcols] + optional_list
-		if allcols==False : others= optional_list
+		if allcols==True and "allcols" in self.__dict__ : others = [str(info) for info in self.allcols] + optional_list
+		else : others= optional_list
 		all_print = "\t".join(standard+others)
 		filehandle.write(all_print+"\n")
 
-# 	# def get_seq(self,fasta):
-# 	# 	"""Extract the DNA sequence corresponding to your window in a file
-# 	# 	>>> win=WindowBed(seq="Chr1",start=10,end=20)
-# 	# 	>>> fasta_sample=
-# 	# 	"""
-# 	# 	sequences=fasta_tools.parse_fasta_to_dict(fasta,output_format="seq")
-# 	# 	self.sequence=sequences[self.seq].seq[self.start:self.end]
+# # 	# def get_seq(self,fasta):
+# # 	# 	"""Extract the DNA sequence corresponding to your window in a file
+# # 	# 	>>> win=WindowBed(seq="Chr1",start=10,end=20)
+# # 	# 	>>> fasta_sample=
+# # 	# 	"""
+# # 	# 	sequences=fasta_tools.parse_fasta_to_dict(fasta,output_format="seq")
+# # 	# 	self.sequence=sequences[self.seq].seq[self.start:self.end]
 
 
 
@@ -161,15 +174,15 @@ class Bed(object):
 		If format_input!=BED, it assumes a 1 based inclusive format and transfor it into bed
 		allcols=TRUE|FALSE is a list containing all the columns of the file that are not stored in the rest
 		skip_nlines number of header lines to skip, (inclyude line starting by # that are skipped anyway. 
-		>>> a = Bed("/home/ludovic/nobackup_ludo/sampled_files/sample.bed",seqcol=0,startcol=1,endcol=2)
+		
+		>>> a = Bed("test_files/windows_write.txt",0,1,2)
 		>>> a
-		'Bed from /home/ludovic/nobackup_ludo/sampled_files/sample.bed contains: 2 windows'
+		'Bed from test_files/windows_write.txt contains: 3 windows'
 		>>> a.windows
-		['Chr1    10    20', 'Chr2    10    20']
-		>>> b = Bed("/home/ludovic/nobackup_ludo/sampled_files/sample.bed",seqcol=0,startcol=1,endcol=2,format_input="noBed") 
-		'Bed from /home/ludovic/nobackup_ludo/sampled_files/sample.bed contains: 2 windows'
-		>>>b.windows
-		['Chr1    9    20', 'Chr2    9    20']
+		['Chr1    10    20', 'Chr1    10    20', 'Chr1    10    20']
+		>>> b = Bed("test_files/windows_write.txt",seqcol=0,startcol=1,endcol=2,format_input="noBed") 
+		>>> b.windows
+		['Chr1    9    20', 'Chr1    9    20', 'Chr1    9    20']
 		"""
 		self.path=path
 		self.format=format
@@ -199,80 +212,91 @@ class Bed(object):
 	def __repr__(self):
 		return repr("Bed from "+self.path+" contains: "+str(len(self.windows))+" windows")
 
-	def write(self,path="windows.bed",format="BED",extrainfo="all",headers=False,col3="end",strand=False):
-		"""Method to write quickly a window file from a 'Bed object. 
+	# def write(self,path="windows.bed",format="BED",extrainfo="all",headers=False,col3="end",strand=False):
+	# 	"""Method to write quickly a window file from a 'Bed object. 
 		
-		path="windows.bed"# path to which the window file is outputted
+	# 	path="windows.bed"# path to which the window file is outputted
 		
-# 		format="BED"# If not BED, assume a 1 based inclusive format GFF type
+	# 	format="BED"# If not BED, assume a 1 based inclusive format GFF type
 		
-# 		extrainfo="all"|None|[poscol,poscol]#to rite all the extra info stored per window. All write all extra columns, None write none, 
-# 		and otherwise one has to use a list of indices (0 based)
+	# 	extrainfo="all"|None|[poscol,poscol]#to rite all the extra info stored per window. All write all extra columns, None write none, 
+	# 	and otherwise one has to use a list of indices (0 based)
 		
-# 		headers=False#A list that will serve as header for the file a # will be added at the start
-# 		col3="end"|"len"# define if the thirdcol is the length or the end of the interval. end by default
+	# 	headers=False#A list that will serve as header for the file a # will be added at the start
+	# 	col3="end"|"len"# define if the thirdcol is the length or the end of the interval. end by default
 		
-# 		strand=True output the strand as the 4 th colum
-# 		"""
-# 		if format!="BED": print "assume that python as zero based windows and print a 1 based format inclusive(GFF type)  "
-# 		#opening thw output
-# 		output=open(path,"w")
-# 		if headers!=False: output.write(headers+"\n")#writing the potential header
-# 		if extrainfo=="all": 
-# 			extrainfo=range(0,len(self.windows[0].allcols))
-# 		elif extrainfo is not list and extrainfo is not "all":
-# 			raise Exception("extrainfo='all'|None|[poscol,poscol]#to rite all the extra info stored per window. All write all extra columns, None write none, \
-# 				and otherwise one has to use a list of indices (0 based)")
-# 		for window in self.windows:
-# 			if format!="BED": window.start+=1
-# 			#print the column order
-# 			if col3=="len":
-# 				basics=([str(window.seq),str(window.start),str(window.length)])
-# 			elif col3=="end":
-# 				basics=([str(window.seq),str(window.start),str(window.end)])
-# 			else:
-# 				raise Exception("col3 argument  must be either'len' either 'end'")
-# 			if strand==True:
-# 				basics+=window.strand
-# 			extrainfo_to_write=[]
-# 			if extrainfo!=None:
-# 				for colnumber in extrainfo:
-# 					if len(window.allcols[colnumber])!=0:#print the annotation to the file
-# 						extrainfo_to_write+=[str(window.allcols[colnumber])]
-# 			list_towrite=basics+extrainfo_to_write+["\n"]
-# 			output.write("\t".join(list_towrite))
-# 		output.close()
-# 		print "wrote ",len(self.windows)," to ",path
+	# 	strand=True output the strand as the 4th colum
 
-# def scaf_length_to_windows_bed(scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len", window_size=100,output_file="windows.bed",cover_all_scaff=True):
-# 	'''A function that return a bed file of discret windows along scaffolds
-# 	Parameters:
-# 	scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len" a file containing two columns, col 1 scaffnames, col 2 length
-# 	window_size=100 in bp
-# 	output_file="windows.bed" the name of the output file containing windows
-# 	cover_all_scaff=True if True the program make a shorter ewindow toi finish the scaffold, if False only windows of  exact window size'''
-# 	## extract a list of scaffolds and scaffold length
-# 	scaffolds=[]
-# 	with open(scaflength_file) as f:
-# 		for line in f:
-# 			info=line.split()
-# 			scaffolds.append(info)
-# 	# go scaffold by scaffold and output windows to the bed file
-# 	output=open(output_file,"w")# open output file
-# 	for scaff,scafflength in scaffolds:# # for every scaffold, scaffold length
-# 		print scaff 
-# 		pos=0 #allow to start at 0 
-# 		while pos<int(scafflength)-int(window_size):# as long as we can make window of window size in the scaffold
-# 			start=pos# start position (first window start at 0)
-# 			end=pos+window_size
-# 			pos=end
-# 			output.write("%s\t%i\t%i\n" % (scaff,start,end))
-# 		if pos < int(scafflength) and cover_all_scaff==True:
-# 			#print "last window"
-# 			start=pos
-# 			end=int(scafflength)+1
-# 			output.write("%s\t%i\t%i\n" % (scaff,start,end))
-# 	output.close()
+	# 	"""
+	# 	if format!="BED": print "assume that python as zero based windows and print a 1 based format inclusive(GFF type)  "
+	# 	#opening thw output
+	# 	output=open(path,"w")
+	# 	if headers!=False: output.write(headers+"\n")#writing the potential header
+	# 	if extrainfo=="all": 
+	# 		extrainfo=range(0,len(self.windows[0].allcols))
+	# 	elif extrainfo is not list and extrainfo is not "all":
+	# 		raise Exception("extrainfo='all'|None|[poscol,poscol]#to rite all the extra info stored per window. All write all extra columns, None write none, \
+	# 			and otherwise one has to use a list of indices (0 based)")
+	# 	for window in self.windows:
+	# 		if format!="BED": window.start+=1
+	# 		#print the column order
+	# 		if col3=="len":
+	# 			basics=([str(window.seq),str(window.start),str(window.length)])
+	# 		elif col3=="end":
+	# 			basics=([str(window.seq),str(window.start),str(window.end)])
+	# 		else:
+	# 			raise Exception("col3 argument  must be either'len' either 'end'")
+	# 		if strand==True:
+	# 			basics+=window.strand
+	# 		extrainfo_to_write=[]
+	# 		if extrainfo!=None:
+	# 			for colnumber in extrainfo:
+	# 				if len(window.allcols[colnumber])!=0:#print the annotation to the file
+	# 					extrainfo_to_write+=[str(window.allcols[colnumber])]
+	# 		list_towrite=basics+extrainfo_to_write+["\n"]
+	# 		output.write("\t".join(list_towrite))
+	# 	output.close()
+	# 	print "wrote ",len(self.windows)," to ",path
+
+def scaf_length_to_windows_bed(scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len", window_size=10000,output_file="windows.bed",cover_all_scaff=True):
+	'''A function that return a bed file of discret windows along scaffolds
+	Parameters:
+	scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len" a file containing two columns, col 1 scaffnames, col 2 length
+	window_size=100 in bp
+	output_file="windows.bed" the name of the output file containing windows
+	cover_all_scaff=True if True the program make a shorter ewindow to finish the scaffold even if it is shorter, if False only windows of  exact window size
+	>>> scaf_length_to_windows_bed(scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len", window_size=10000,output_file="temp.bed",cover_all_scaff=True)
+	Some windows will be smaller than the desired size as we cover all scaffolds (cover_all_scaff == True)
+	>>> sum(1 for line in open('temp.bed'))
+	131139
+	>>> scaf_length_to_windows_bed(scaflength_file="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len", window_size=10000,output_file="temp.bed",cover_all_scaff=False) # a file w
+	>>> sum(1 for line in open('temp.bed'))
+	109296
+	'''
+	## extract a list of scaffolds and scaffold length
+	if cover_all_scaff==True: print "Some windows will be smaller than the desired size as we cover all scaffolds (cover_all_scaff == True)"
+	scaffolds=[]
+	if not os.path.isfile("/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len") : raise Exception ("scaffold file:" ,scaflength_file, "does not exist")
+	with open(scaflength_file) as f:
+		for line in f:
+			info=line.split()
+			scaffolds.append(info)
+	# go scaffold by scaffold and output windows to the bed file
+	output=open(output_file,"w")# open output file
+	for scaff,scafflength in scaffolds:# # for every scaffold, scaffold length
+		#print scaff 
+		pos=0 #allow to start at 0 
+		while pos<int(scafflength)-int(window_size):# as long as we can make window of window size in the scaffold
+			start=pos# start position (first window start at 0)
+			end=pos+window_size
+			pos=end
+			output.write("%s\t%i\t%i\n" % (scaff,start,end))
+		if pos < int(scafflength) and cover_all_scaff==True:
+			#print "last window"
+			start=pos
+			end=int(scafflength)+1
+			output.write("%s\t%i\t%i\n" % (scaff,start,end))
+	output.close()
 
 
 # def intersect_per_windows(window_file,annotation_file,output_folder):
