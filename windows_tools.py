@@ -299,30 +299,29 @@ def scaf_length_to_windows_bed(scaflength_file="/proj/b2010010/private/assembly/
 	output.close()
 
 
-# def intersect_per_windows(window_file,annotation_file,output_folder):
-# 	''' take a window file (bed) and intersect it with an another window file (GFF/GTF/BED). Report one file per window in the window file conataining all the regions that intersect with the window_file.
-# 	NOTE automatically correct for GTF strting 1
-# 	Parameters:
-# 	window_file# a windows file for which you want a file per intersect
-# 	annotation_file# a file for which you want to report the entries per window of window file
-# 	output_folder#the folder in which you will have a folder per window in the window file
-# 	'''
-# 	# gff, gtf or bed?
-# 	file_extension=annotation_file.split(".")[len(annotation_file.split("."))-1]
-# 	os.mkdir(output_folder)
-# 	if file_extension in ["gtf","gff","bed"]: # create a fake bed file
-# 		os.system("intersectBed -a "+window_file  +" -b "+ annotation_file +" -wa -wb  > "+window_file+"temp.bed")
-# 		with open(window_file) as f:
-# 			for line in f:
-# 				os.system("cat "+window_file + "temp.bed | grep -e '^"+line.split()[0]+"\s*"+line.split()[1]+"\s*"+line.split()[2]+"' | sed -e  's/^"+line.split()[0]+"\s*"+line.split()[1]+"\s*"+line.split()[2]+"\s*//g' > "+output_folder+"/"+"_".join(line.split())+".bed" )
-# 	else:
-# 		"Annotations file can only handle a .gff , .gtf or .bed"
-# 	os.remove(window_file + "temp.bed")
-# bedfiles_of_markers="exons_with_genes_names_uniq_lines_withoutZ.bed"
-# VCF_allsite_file="H.gatk.allsites.vcf.bgz"
-# folder_vcf_files_all_sites_per_markers="all_exons_withoutZ_Hungary"
-# output_file="output_bootstrapping_exons_10000.txt"
-
+def intersect_per_windows(window_file,annotation_file,output_folder):
+	''' take a window file (bed) and intersect it with an another window file (GFF/GTF/BED). Report one file per window in the window file conataining all the regions that intersect with the window_file.
+	NOTE automatically correct for GTF strting 1
+	Parameters:
+	window_file# a windows file for which you want a file per intersect
+	annotation_file# a file for which you want to report the entries per window of window file
+	output_folder#the folder in which you will have a folder per window in the window file
+	'''
+	# gff, gtf or bed?
+	file_extension=annotation_file.split(".")[len(annotation_file.split("."))-1]
+	if not os.path.exists(output_folder):
+		os.mkdir(output_folder)
+	else:
+		raise Exception("The output folder already exists!")
+	if file_extension in ["gtf","gff","bed"]: # create a fake bed file
+		os.system("intersectBed -a "+window_file  +" -b "+ annotation_file +" -wa -wb  > "+window_file+"temp.bed")
+		with open(window_file) as f:
+			for line in f:
+				os.system("cat "+window_file + "temp.bed | grep -e '^"+line.split()[0]+"\s*"+line.split()[1]+"\s*"+line.split()[2]+"' | sed -e  's/^"+line.split()[0]+"\s*"+line.split()[1]+"\s*"+line.split()[2]+"\s*//g' > "+output_folder+"/"+"_".join(line.split())+".bed" )
+	else:
+		"Annotations file can only handle a .gff , .gtf or .bed"
+	os.remove(window_file + "temp.bed")
+	
 # def intersect_per_window_vcfgz(vcfzipped_file,window_file,output_folder,rm=False):
 # 	'''similar as intersect_per_windows but output a vcf file per line int he window_filke file. You  use tyo only output rmasked region by setting to rm to a bedffile of repeat. 
 # 	It should be a bedfile of repeats and not a bedfile of regions non-repeatedcan
