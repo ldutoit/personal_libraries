@@ -35,3 +35,4 @@ Contains all my bin commands (bash and python), and it is added to my path. help
 sortbig_bed_vcf.sh ### sort a big bed or vcf file
 faSplit ## split a fasta file into small files
 maf_convert.py # convert multple alignemtne format maf and psl
+swap_min_max.py # used to swap column to have always the first one with the min and the second one with the max
