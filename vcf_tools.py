@@ -311,7 +311,7 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 			 		del record.samples[index]
 			 	#print record.samples
 				nsites_ok+=1
-				sum_pairwise+=record.nucl_diversity
+				sum_pairwise+=record.nucl_diversity 
 			#compute total information for the window
 	elif chrom=="all":
 		for record in input_vcf:# for every site
@@ -353,6 +353,7 @@ def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=100
 				cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=[1,2],nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
 				nsites_total+=1
 				if cond:# if it does
+					#if  any([int(sample['DP'])<5 for sample in record.samples]): print [int(sample['DP']) for sample in record.samples] # to check this argument nb_ind_with_min_cov
 					nsites_OK+=1
 	elif chrom=="all":
 		for record in input_vcf:# for every site

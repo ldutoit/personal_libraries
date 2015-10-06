@@ -55,7 +55,7 @@ for key in fAlb15.dict_chrom.keys():
 		length_chrom += int(dict_scaf_len[scaf]) + 5000
 	dict_chrom_len[key] = length_chrom
 
-#store scaf length for every scaffold in the assembly
+#store scaf length for every scaffold in the assembly 
 
 def parse_fasta_to_dict(filename,output_format="string"):
 	''' parse a fasta file to a dictionnary of sequences with values being either seq objects from Biopython or string

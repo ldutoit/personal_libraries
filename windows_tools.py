@@ -48,7 +48,6 @@ class WindowBed(object):
 		"""
 		if self.seq != w2.seq: return False
 		return  min(int(self.end), int(w2.end)) - max(int(self.start), int(w2.start)) > 0
-		4
 
 	def overlap_length(self,w2):
 		"""for BED windows, return length of overlap
@@ -116,13 +115,16 @@ class WindowBed(object):
 				nhits+=1
 				bp+=ov_length
 				if out =="weighted_average":
+					if not (win_to_check.allcols[col_interest-4]).replace(".","").isdigit(): 
+						print (win_to_check.allcols[col_interest-4]),"FAIL, value of interest is not numerical"
+						return ["NA",0] # if the value is not numerical for one of the overlaps, we return NA
 					value = float(win_to_check.allcols[col_interest-4])
 					if col_weight != None : 
 						temp_weight = float(win_to_check.allcols[col_weight-4])
-						weight+=temp_weight
 					else:
 						temp_weight = ov_length
-					unweighted_sum += value * int(temp_weight)
+					weight+=temp_weight
+					unweighted_sum += value * float(temp_weight)
 				if verbose==True: print "OVERLAP: ", self,win_to_check
 		if out=="nb":
 			return nhits
@@ -322,138 +324,138 @@ def intersect_per_windows(window_file,annotation_file,output_folder):
 		"Annotations file can only handle a .gff , .gtf or .bed"
 	os.remove(window_file + "temp.bed")
 	
-# def intersect_per_window_vcfgz(vcfzipped_file,window_file,output_folder,rm=False):
-# 	'''similar as intersect_per_windows but output a vcf file per line int he window_filke file. You  use tyo only output rmasked region by setting to rm to a bedffile of repeat. 
-# 	It should be a bedfile of repeats and not a bedfile of regions non-repeatedcan
-# 	NOTE automatically correct for GTF strting 1
-# 	Parameters:
-# 	window_file# a windows file for which you want a file per intersect
-# 	window_file# a file for which you want to report the entries per window of window file
-# 	output_folder#the folder in which you will have a folder per window in the window file
-# 	rm# False, if stated otherwise will i
-# 	'''
-# 	os.mkdir(output_folder)
-# 	with open(window_file) as f:
-# 		for item in f:
-# 			print "Adding a repeat mask"
-# 			#print item.split()
-# 			info=item.split()
-# 			#print ("tabix "+VCF_allsite_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" >  "+folder_vcf_files_all_sites_per_markers+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+"_"+str(info[3])+".vcf")
-# 			if rm==False:
-# 				os.system("tabix "+vcfzipped_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" >  "+output_folder+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+".vcf")
-# 			else:
-# 				os.system("tabix "+vcfzipped_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" | intersectBed -a - -b "+rm+  " -v  >  "+output_folder+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+".vcf")
+def intersect_per_window_vcfgz(vcfzipped_file,window_file,output_folder,rm=False):
+	'''similar as intersect_per_windows but output a vcf file per line int he window_filke file. You  use tyo only output rmasked region by setting to rm to a bedffile of repeat. 
+	It should be a bedfile of repeats and not a bedfile of regions non-repeatedcan
+	NOTE automatically correct for GTF strting 1
+	Parameters:
+	window_file# a windows file for which you want a file per intersect
+	window_file# a file for which you want to report the entries per window of window file
+	output_folder#the folder in which you will have a folder per window in the window file
+	rm# False, if stated otherwise will i
+	'''
+	os.mkdir(output_folder)
+	with open(window_file) as f:
+		for item in f:
+			print "Adding a repeat mask"
+			#print item.split()
+			info=item.split()
+			#print ("tabix "+VCF_allsite_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" >  "+folder_vcf_files_all_sites_per_markers+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+"_"+str(info[3])+".vcf")
+			if rm==False:
+				os.system("tabix "+vcfzipped_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" >  "+output_folder+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+".vcf")
+			else:
+				os.system("tabix "+vcfzipped_file+" "+info[0]+":"+str(int(info[1])+1)+"-"+str(int(info[2]))  +" | intersectBed -a - -b "+rm+  " -v  >  "+output_folder+"/"+info[0]+"_"+str(int(info[1])+1)+"_"+str(int(info[2]))+".vcf")
 
-# def gtftobed(infile,outfile,keep_annotations=False):
-# 	'''transform a gtf or a gtf to a bed file ut loose annotation'''
-# 	output=open(outfile,"w")
-# 	with open(infile) as f:
-# 		for line in f:
-# 			info=line.split("\t")
-# 			if keep_annotations==False:
-# 				output.write(str(info[0])+"\t"+str(int(info[3])-1)+"\t"+str(info[4])+"\n")
-# 			else:
-# 				output.write(str(info[0])+"\t"+str(int(info[3])-1)+"\t"+"\t".join(info[4:len(info)])+"\n")
-# 	output.close()
-
-
-# def sortabed(infile):
-# 	''' sort a bed file and output the same infile than outfile'''
-# 	os.system("sort -k1,1 -k2,2g -o temp.bed " +infile)
-# 	os.remove(infile)
-# 	os.rename("temp.bed",infile)
-
-# def subtractBed(infile,outfile,regionstosubtract):
-# 	''' simplifiedsubtractBed from bedtools'''
-# 	os.system("subtractBed -a "+ infile + " -b " + regionstosubtract + " | sort -k1,1 -k2,2g - >"  + outfile)
+def gtftobed(infile,outfile,keep_annotations=False):
+	'''transform a gtf or a gtf to a bed file ut loose annotation'''
+	output=open(outfile,"w")
+	with open(infile) as f:
+		for line in f:
+			info=line.split("\t")
+			if keep_annotations==False:
+				output.write(str(info[0])+"\t"+str(int(info[3])-1)+"\t"+str(info[4])+"\n")
+			else:
+				output.write(str(info[0])+"\t"+str(int(info[3])-1)+"\t"+"\t".join(info[4:len(info)])+"\n")
+	output.close()
 
 
-# def subtractBed_recursively(folder_infiles=".",regionstosubtract="",outfolder="subtractedBeds",prefixoutfiles="subtracted."):
-# 	''' apply recursively  simplified subtractBed from bedtools to allk the bedtools in a folder. Direct output into a new folder'''
-# 	os.mkdir(outfolder)
-# 	for item in os.listdir(folder_infiles):
-# 		if item.endswith(".bed"):
-# 			print str(item)
-# 			subtractBed(infile=item,outfile=str(outfolder)+"/"+prefixoutfiles+item,regionstosubtract=regionstosubtract)
-# 		else:
-# 			print str(item) + " is not a '.bed' file... skipping"
+def sortabed(infile):
+	''' sort a bed file and output the same infile than outfile'''
+	os.system("sort -k1,1 -k2,2g -o temp.bed " +infile)
+	os.remove(infile)
+	os.rename("temp.bed",infile)
+
+def subtractBed(infile,outfile,regionstosubtract):
+	''' simplifiedsubtractBed from bedtools'''
+	os.system("subtractBed -a "+ infile + " -b " + regionstosubtract + " | sort -k1,1 -k2,2g - >"  + outfile)
 
 
-# def get_headers(file):
-# 	''' get the header of a VCF file and return it in a list'''
-# 	with open(file) as f:
-# 		for line in f:
-# 			if not line.startswith("##"):
-# 				if line.startswith("#"):
-# 					headers=line.split()
-# 					return headers
-# 					break
+def subtractBed_recursively(folder_infiles=".",regionstosubtract="",outfolder="subtractedBeds",prefixoutfiles="subtracted."):
+	''' apply recursively  simplified subtractBed from bedtools to allk the bedtools in a folder. Direct output into a new folder'''
+	os.mkdir(outfolder)
+	for item in os.listdir(folder_infiles):
+		if item.endswith(".bed"):
+			print str(item)
+			subtractBed(infile=item,outfile=str(outfolder)+"/"+prefixoutfiles+item,regionstosubtract=regionstosubtract)
+		else:
+			print str(item) + " is not a '.bed' file... skipping"
 
 
-# def splitBed(bedfile,nb=10,per="bp",output_folder="splitted",prefix="splitted_"):
-# 	'''split a bedfile into a new folder into "nb" files in alphabetical order (up to 10000) per "bp" or "num_win"
-# 	'''
-# 	assert per=="bp" or per=="nb_win","invalid per argument, should be bp or num_win"
-# 	windows = Bed(bedfile,0,1,endcol=2).windows
-# 	os.mkdir(output_folder)
-# 	file_num=1
-# 	buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
-# 	output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
-# 	if per=="bp":
-# 		bp=0
-# 		for win in windows:
-# 			bp+=win.length
-# 			win.write(output)
-# 			if bp>=nb:
-# 				output.close()
-# 				file_num+=1
-# 				buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
-# 				output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
-# 				bp=0
-# 	if per=="nb_win":
-# 		nb_win=0
-# 		for win in windows:
-# 			win.write(output)
-# 			nb_win+=1
-# 			if nb_win>=nb:
-# 				output.close()
-# 				file_num+=1
-# 				buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
-# 				output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
-# 				nb_win=0
-# 	output.close()
-# 	print file_num," files in", output_folder
+def get_headers(file):
+	''' get the header of a VCF file and return it in a list'''
+	with open(file) as f:
+		for line in f:
+			if not line.startswith("##"):
+				if line.startswith("#"):
+					headers=line.split()
+					return headers
+					break
 
-# def bed_calculate_densities(bed,intersectwith,output_file):
-# 	'''calculate the densities of each window in bed for regions in bed_denstities
-# 	and append it as a last column in output_file
-# 	NOTE Careful with redundancy, crete bugs!'''
-# 	windows = Bed(bed,0,1,endcol=2).windows
-# 	tointersectwith =  Bed(intersectwith,0,1,endcol=2).windows
-# 	output=open(output_file,"w")
-# 	i=0
-# 	for win in windows:
-# 		i+=1
-# 		print win,i
-# 		total = win.overlap_listwindows(tointersectwith,out="bp",verbose=False)
-# 		win.dens =  str(total/float(win.length))
-# 		win.write(output,[win.dens])
-# 	output.close()
 
-# def bed_calculate_weighted_average(bed,intersectwith,output_file,col_interest=4,col_weight= None):
-# 	'''calculate the weighted average per basepair overlapping of each window in bed for col_intersect(1 based)  in intersectwith
-# 	and append two columns in output file, average value and bp overlapping
-# 	NOTE Careful with redundancy, create bugs!
-# 	Can also use a col_weight (1 based) instead of a window list'''
-# 	windows = Bed(bed,0,1,endcol=2).windows
-# 	tointersectwith =  Bed(intersectwith,0,1,endcol=2).windows
-# 	output=open(output_file,"w")
-# 	i=0
-# 	for win in windows:
-# 		i+=1
-# 		print win,i
-# 		win.weighted_average = win.overlap_listwindows(tointersectwith,out="weighted_average",verbose=False,col_interest=col_interest,col_weight  = col_weight )
-# 		win.write(output,[str(win.weighted_average[0]),str(win.weighted_average[1])])
-# 	output.close()
+def splitBed(bedfile,nb=10,per="bp",output_folder="splitted",prefix="splitted_"):
+	'''split a bedfile into a new folder into "nb" files in alphabetical order (up to 10000) per "bp" or "num_win"
+	'''
+	assert per=="bp" or per=="nb_win","invalid per argument, should be bp or num_win"
+	windows = Bed(bedfile,0,1,endcol=2).windows
+	os.mkdir(output_folder)
+	file_num=1
+	buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
+	output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
+	if per=="bp":
+		bp=0
+		for win in windows:
+			bp+=win.length
+			win.write(output)
+			if bp>=nb:
+				output.close()
+				file_num+=1
+				buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
+				output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
+				bp=0
+	if per=="nb_win":
+		nb_win=0
+		for win in windows:
+			win.write(output)
+			nb_win+=1
+			if nb_win>=nb:
+				output.close()
+				file_num+=1
+				buffer0="".join((str(i) for i in np.repeat(0,5-len(str(file_num)))))
+				output=open(output_folder+"/"+prefix+buffer0+str(file_num)+".bed","w")
+				nb_win=0
+	output.close()
+	print file_num," files in", output_folder
+
+def bed_calculate_densities(bed,intersectwith,output_file):
+	'''calculate the densities of each window in bed for regions in bed_denstities
+	and append it as a last column in output_file
+	NOTE Careful with redundancy, crete bugs!'''
+	windows = Bed(bed,0,1,endcol=2).windows
+	tointersectwith =  Bed(intersectwith,0,1,endcol=2).windows
+	output=open(output_file,"w")
+	i=0
+	for win in windows:
+		i+=1
+		print win,i
+		total = win.overlap_listwindows(tointersectwith,out="bp",verbose=False)
+		win.dens =  str(total/float(win.length))
+		win.write(output,[win.dens])
+	output.close()
+
+def bed_calculate_weighted_average(bed,intersectwith,output_file,col_interest=4,col_weight= None):
+	'''calculate the weighted average per basepair overlapping of each window in bed for col_intersect(1 based)  in intersectwith
+	and append two columns in output file, average value and bp overlapping
+	NOTE Careful with redundancy, create bugs!
+	Can also use a col_weight (1 based) instead of a window list'''
+	windows = Bed(bed,0,1,endcol=2).windows
+	tointersectwith =  Bed(intersectwith,0,1,endcol=2).windows
+	output=open(output_file,"w")
+	i=0
+	for win in windows:
+		i+=1
+		print win,i
+		win.weighted_average = win.overlap_listwindows(tointersectwith,out="weighted_average",verbose=False,col_interest=col_interest,col_weight  = col_weight )
+		win.write(output,[str(win.weighted_average[0]),str(win.weighted_average[1])])
+	output.close()
 
 
