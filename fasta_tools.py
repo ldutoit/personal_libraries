@@ -1,7 +1,11 @@
 #!/usr/bin/env python
 # Filename: fasta_tools.py
-from Bio import SeqIO
-import windows_tools
+try:
+	from Bio import SeqIO
+	import windows_tools
+except:
+	raise Exception  ("could not import the modules required all or some of the functions : Bio or windows_tools")
+
 
 ###put the  the scaffolds in the assembly into a dictionnary 
 
@@ -47,14 +51,17 @@ with open (scaf_len) as f :
 	for line in f:
 		dict_scaf_len[line.split()[0]]=line.split()[1]
 
+scaffs=0
+total_length=0
 dict_chrom_len={}
 for key in fAlb15.dict_chrom.keys():
 	print key
 	length_chrom=-5000# we add every scaf length_chrom + 5000... need to remove 5000 in the end cause the last scaffold is not followed by 5000 gaps
 	for scaf in fAlb15.dict_chrom[key]:
 		length_chrom += int(dict_scaf_len[scaf]) + 5000
+		scaffs+=1
 	dict_chrom_len[key] = length_chrom
-
+	total_length+=length_chrom
 #store scaf length for every scaffold in the assembly 
 
 def parse_fasta_to_dict(filename,output_format="string"):

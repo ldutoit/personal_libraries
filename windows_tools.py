@@ -1,9 +1,13 @@
 #!/usr/bin/env python2
 # Filename: windows_tools.py
-import os,sys,vcf,pysam
-import numpy as np 
-import filecmp 
-	
+
+try :
+	import os,sys,vcf,pysam
+	import numpy as np 
+	import filecmp 
+except:
+	raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nsys\nvcf\nfilecmp")
+
 class WindowBed(object):
 	""" a class to define genomic interval, each object has to be defined by at least a seq and two of the three following parameters: start,end,len. 
 	The third is inferred
@@ -61,63 +65,74 @@ class WindowBed(object):
 		"""
 		if self.seq != w2.seq: return 0
 		return max(0, min(self.end, w2.end) - max(self.start, w2.start))
-	
-	# def overlap_listwindows(self,list_windows,out="nb",verbose=True):# retun number of hits or number of bp
-	# 	"""for BED windows, return length of overlap or nb hits to a list of windows
-	# 	>>> win=WindowBed(seq="Chr1",start=10,end=20)
-	# 	>>> list_win=[WindowBed(seq="Chr1",start=10,end=20),WindowBed(seq="Chr2",start=10,end=20)]
-	# 	>>> win.overlap_length(WindowBed(seq="Chr1",start=10,end=20))
-	# 	10
-	# 	>>> win.overlap_listwindows(list_win,verbose=False)
-	# 	10
-	# 	"""
-	# 	win=self
-	# 	print win
-	# 	nhits=0
-	# 	bp=0
-	# 	for win_to_check in list_windows:
-	# 		ov_length=self.overlap_length(win_to_check)
-	# 		if ov_length!=0:
-	# 			nhits+=1
-	# 			bp+=ov_length
-	# 			if verbose==True: print "OVERLAP: ", self,win_to_check
-	# 	if out=="nb":
-	# 		return nhits
-	# 	elif out=="bp":
-	# 		return bp
-	# 	else:
-	# 		raise Exception("invalid out arguments (choose 'bp'|'nb')")
+	def overlap_window(self,w2):
+		"""for BED windows, return a window with the coordinates of the overlap
+
+		"""
+		assert self.overlap(w2)# they have to overlap
+		return WindowBed(self.seq, max(self.start, w2.start), min(self.end, w2.end)) # from the biggest start to the smaller end
+	def gap (self,w2,out ="nb"):
+		""" 
+		For BED windows, return the gap gap between two windows.
+		out = "nb"| "window" # return the nb of the gap b default but can also return coordinates of the gap
+		>>> win2 = WindowBed("a",100,200)
+		>>> win1 =  WindowBed("a",250,300)
+		>>> win1.gap(win2)
+		50
+		"""
+		assert self.seq  == w2.seq  # same sequence for both windows
+		assert not self.overlap(w2)  # there is a gap between them
+		if out == "nb":
+			return  max(self.start,w2.start) - min(self.end,w2.end)
+		elif out == "window":
+			return WindowBed(self.seq,min(self.end,w2.end),max(self.start,w2.start))
+		else:
+			raise Exception("invalid out argument, should be 'nb' or 'window'")
+
 
 	def overlap_listwindows(self,list_windows,out="nb",verbose=True, col_interest = 4, col_weight  = None ):# retun number of hits or number of bp
-		"""for BED windows, return length of overlap or nb hits to a list of window.  out can be bp or nb (number of overlaps or of bpair overlap)
+		"""for BED windows,  tools to overlap a window a list of windows.
+			
+		list_windows  # the list of windows you want to check for overlaps 
+
+		out can be bp or nb (number of overlaps or of bpair overlap)
 		NOTE: out ="weighted_average"-It can also return average value for a given column (col_interest = INT, 1 based) in the list of windows overlapping with the original window. It is weighted by the nb of bp overlapping for every overlap.
 		One can give another column as the weight using col_weight , if None.. the function use the number of bp overlapping to weight
 		It would then the average value as well as the nb of bp overlap
->>> win=WindowBed(seq="Chr1",start=10,end=20)
->>> list_win=[WindowBed(seq="Chr1",start=10,end=20),WindowBed(seq="Chr2",start=10,end=20)]
->>> win.overlap_length(WindowBed(seq="Chr1",start=10,end=20))
-10
->>> win.overlap_listwindows(list_win,verbose=False)
-'Chr1    10    20'
-1
->>> win.overlap_listwindows(list_win,verbose=False,out="bp")
-'Chr1    10    20'
-10
+		out = nb,bp, weighted_average or list
+
+		>>> win=WindowBed(seq="Chr1",start=10,end=20)
+		>>> list_win=[WindowBed(seq="Chr1",start=10,end=20),WindowBed(seq="Chr2",start=10,end=20)]
+		>>> win.overlap_length(WindowBed(seq="Chr1",start=10,end=20))
+		10
+		>>> win.overlap_listwindows(list_win,verbose=False)
+		1
+		>>> win.overlap_listwindows(list_win,verbose=False,out="list")
+		['Chr1    10    20']
+		>>> list_win[0].allcols = [10,10]###to test weighted average
+		>>> list_win.append(WindowBed(seq="Chr1",start=5,end=15))
+		>>> list_win[2].allcols = [5,10]
+		>>> list_win[1].allcols = [10,20]
+		>>> win.allcols = [1,2]
+		>>> win.overlap_listwindows(list_win,verbose=False,out="weighted_average",col_interest = 4)
+		[8.333333333333334, 15]
+		>>> win.overlap_listwindows(list_win,verbose=False,out="weighted_average",col_interest = 4,col_weight  = 5)
+		[7.5, 15]
     	"""
 		win=self
-		print win
+		if verbose==True: print( win)
 		nhits=0
 		bp=0
+		hits = []
 		if out == "weighted_average": weight = unweighted_sum = 0 # for weighted average
 		for win_to_check in list_windows:
 			ov_length=self.overlap_length(win_to_check)
 			if ov_length!=0:
+				hits.append(win_to_check) 
 				nhits+=1
 				bp+=ov_length
 				if out =="weighted_average":
-					if not (win_to_check.allcols[col_interest-4]).replace(".","").isdigit(): 
-						print (win_to_check.allcols[col_interest-4]),"FAIL, value of interest is not numerical"
-						return ["NA",0] # if the value is not numerical for one of the overlaps, we return NA
+					if verbose==True: print( win_to_check)
 					value = float(win_to_check.allcols[col_interest-4])
 					if col_weight != None : 
 						temp_weight = float(win_to_check.allcols[col_weight-4])
@@ -125,16 +140,19 @@ class WindowBed(object):
 						temp_weight = ov_length
 					weight+=temp_weight
 					unweighted_sum += value * float(temp_weight)
-				if verbose==True: print "OVERLAP: ", self,win_to_check
+				if verbose==True: print ("OVERLAP: ", self,win_to_check)
 		if out=="nb":
 			return nhits
 		elif out=="bp":
 			return bp
 		elif out=="weighted_average":
 			if bp != 0:
+				if verbose==True: print (" [weighted average ,", "total_weight]")
 				return [unweighted_sum/weight,bp]
 			else:
 				return ["NA",0]
+		elif out=="list":
+			return hits
 		else:
 			raise Exception("invalid out arguments (choose 'bp'|'nb' | 'weighted_average')")
 
@@ -458,4 +476,6 @@ def bed_calculate_weighted_average(bed,intersectwith,output_file,col_interest=4,
 		win.write(output,[str(win.weighted_average[0]),str(win.weighted_average[1])])
 	output.close()
 
+import doctest
+doctest.testmod()
 
