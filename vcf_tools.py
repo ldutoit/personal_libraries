@@ -10,7 +10,7 @@ except:
 
 
 
-def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=10000,inds="all",bgzip=True,min_nsites=10000,called=True,nb_ind_with_min_cov="all"):
+def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=10000,inds="all",bgzip=True,min_nsites=10000,called=True,nb_ind_with_min_cov="all",uppmax=False):
 	'''append pi information window by window to a bed file, for parameters information refers to the functions called
 
 	vcf_snps # the path the the snps files
@@ -25,18 +25,34 @@ def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 	called=True # all individuals should be assigned a genotype (for SNPs)
 	nb_ind_with_min_cov="all"  # the number of individuals in "inds" that should have the mincov for a given site, by default all individuals#
 	'''
+	if uppmax == True:
+		scratch_folder = os.environ.get("SNIC_TMP")
+		print "copying the vcfs to the scratch folder "+scratch_folder
+		###copy thr vcf
+		if not os.path.exists(scratch_folder+"/"+os.path.basename(vcf_snps)):
+			os.system("cp "+ vcf_snps+" $SNIC_TMP/" )
+			print "vcf_snps copied"
+		if not os.path.exists(scratch_folder+"/"+os.path.basename(vcf_allsites)):
+			os.system("cp "+ vcf_allsites+" $SNIC_TMP/" )
+		print "copy complete"
+		###copy the index files
+		if not os.path.exists(scratch_folder+"/"+os.path.basename(vcf_allsites+".tbi")):
+			os.system("cp "+ vcf_allsites+".tbi $SNIC_TMP/" )
+		if not os.path.exists(scratch_folder+"/"+os.path.basename(vcf_snps+".tbi")):
+			os.system("cp "+ vcf_snps+".tbi $SNIC_TMP/" )
+		vcf_snps = scratch_folder+"/"+os.path.basename(vcf_snps)
+		vcf_allsites = scratch_folder+"/"+os.path.basename(vcf_allsites)
 	output=open(output,"w")
 	with open(bed) as f:
 		for line in f:
 			info = line.split()
-			count = pi_double_vcf(vcf_snps,vcf_allsites,line.split()[0],int(line.split()[1]),int(line.split()[2]),mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,min_nsites=min_nsites,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
+			count = pi_double_vcf(vcf_snps,vcf_allsites,line.split()[0],int(line.split()[1])+1,int(line.split()[2]),mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,min_nsites=min_nsites,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
 			info.append(str(count[0]))#sum_pairwise
 			info.append(str(count[1]))#number of ok sites
 			info.append(str(count[3]))#number of snps
 			print "\t".join(info)+"\n"
 			output.write("\t".join(info)+"\n")
 	output.close()
-
 
 
 def extract_features(vcf_file,feature,chrom,start,end,sampling_frequency=1,missing_data="None",bgzip=True,write=True,outfile=""):
@@ -333,12 +349,16 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 			elif output=="extended":
 				return [0,0]
 		for record in input_vcf.fetch(chrom,start,end):# for every site
+			#print "HERE"
 			cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=[1,2],nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
+			#print "cond",cond
+			#print "HERE2"
 			if cond:# if it does
 			 	for index in  sorted(inds_to_delete)[::-1]:#remove the individuals we do not want
 			 		del record.samples[index]
 			 	#print record.samples
 				nsites_ok+=1
+				print record.nucl_diversity
 				sum_pairwise+=record.nucl_diversity 
 			#compute total information for the window
 	elif chrom=="all":
@@ -357,7 +377,7 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 		return [sum_pairwise,nsites_ok]
 	#Go in normal vcf and count sites
 	
-def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,nb_ind_with_min_cov="all",nalleles=[1,2]):
+def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,nb_ind_with_min_cov="all",nalleles=[1,2],snps=False):
 	"""
 	count the number of sites in a vcf file in a given stretch that respect a certain condition
 	output a list [nsites_pass_the_filter, nsites_total_in_the_stretch_considered]
@@ -378,23 +398,27 @@ def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=100
 	>>> count_sites_under_condition_vcf(sample_vcfgz,chrom="N00180",start=100,end=199,mincov=7,maxcov=10000,inds="all",bgzip=True)
 	N00180 100 199
 	[29, 100]
+	snps , if true, only consider sites that are also snps
 	"""
 	input_vcf=vcf.Reader(fsock=None, filename=vcf_file, compressed=bgzip, prepend_chr="False", strict_whitespace=False)#open the vcf parser
 	nsites_OK=0
 	nsites_total=0
-	#print "in count_sites_under_condition_vcf nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
-
+	#print "in count_sites_under_condition_vcf nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", ind
 	if chrom!="all":
 			print chrom,start,end
+			check=len(sh.tabix(vcf_file,str(chrom)+":"+str(start)+"-"+str(end)))
+			#print "check;' ",check,"'"
+			if check==0: 
+				return [0,0]
 			for record in input_vcf.fetch(chrom,start,end):# for every site
-				cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
+				cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
 				nsites_total+=1
 				if cond:# if it does
 					#if  any([int(sample['DP'])<5 for sample in record.samples]): print [int(sample['DP']) for sample in record.samples] # to check this argument nb_ind_with_min_cov
 					nsites_OK+=1
 	elif chrom=="all":
 		for record in input_vcf:# for every site
-			cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
+			cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
 			nsites_total+=1
 			if cond:# if it does
 				nsites_OK+=1
@@ -424,7 +448,7 @@ def count_sites_under_condition_vcf_allbed(input_bed,input_vcf,output_file,minco
 			output.write("\t".join(line_split)+"\n")
 	output.close()
 
-def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=[1,2,3,4],nb_ind_with_min_cov="all"):
+def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=[1,2,3,4],nb_ind_with_min_cov="all",snps=False):
 	"""Check if a site respect coverage conditions for selected individuals. Return TRUE/False. In order to be true if any coverage is specified the individual has to be called
 
 		input_vcf # an object of class vcf.parser.Reader from which the recorded is extracted
@@ -463,13 +487,15 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 		inds=input_vcf.samples
 	#print "in checkSnp_Cov nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
 	if not len(record.alleles) in nalleles: return False # check the number of alleles
+	print snps 
+	if snps==True and record.num_het == 0: return False
 	if "DP" in record.FORMAT:
 		if mincov==0 :# we want to avoid to take in the None that are 0 and prevent us to use the condition
 			cond=all([ ind["DP"]<=maxcov for ind in record.samples if ind["DP"]!=None and (ind.sample in inds) ]) 
 		else: # we need to take into account the none cause they mean DP=0 and cond=False
+			#print [mincov<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)   
 			cond=nb_ind_with_min_cov<=[mincov<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)   
 	else:
-		
 		cond=False#raise Exception ("format do not include DP for",record.POS,record.CHROM)
 	#if cond==True: print [sample["DP"] for sample in record.samples if (sample.sample in inds)]
 	#if cond==True: assert 8<=[5<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)," very ugly.... just to check that 1 individual is okay for 7 reads and that I check that all along"
@@ -495,13 +521,13 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 	'''
 	#print "pi_doublevcf() without subsampling"
 	count_sites = count_sites_under_condition_vcf(vcf_allsites,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
-	count_snps = count_sites_under_condition_vcf(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2]) # this line just serve as giving an extra info in the logs files
+	count_snps = count_sites_under_condition_vcf(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2],snps=True) # this line just serve as giving an extra info in the logs files
 	#print "pi_double_vcf()sum pairwise"
 	if count_sites[0] >max_nsites:
 		a = subsample_to_X_callable_sites(vcf_allsites,chrom,start,end,max_nsites,mincov,maxcov,inds)
 		sum_pairwise = sum_pairwise_differences(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 		count_sites = count_sites_under_condition_vcf(vcf_allsites,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
-		count_snps = count_sites_under_condition_vcf(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2]) # this line just serve as giving an extra info in the logs files
+		count_snps = count_sites_under_condition_vcf(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2],snps=True) # this line just serve as giving an extra info in the logs files
 
 	else:
 		print "enter 1"
@@ -588,6 +614,7 @@ def pi_double_vcf_fix_nsites(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0
 	a = subsample_to_X_callable_sites(vcf_allsites,chrom,start,end,max_nsites,mincov,maxcov,inds)
 	print a 
 	sum_pairwise = sum_pairwise_differences(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip)
+	print a
 	pi = sum_pairwise/int(max_nsites)
 	print "pi_double_vcf()",pi,max_nsites,"NA"
 	return [pi,max_nsites,"NA"] # pi, nsites passing condition, total nsites

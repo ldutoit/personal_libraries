@@ -42,3 +42,13 @@ plot_binning_to_y<- function(x,y,nb_bins,output_file,cex_points=0.5,meth_cor="pe
 plot_correlation(means_x,means_y,output_file= output_file ,cex=cex_points,meth_cor=meth_cor)
 
 }
+
+
+plot_quadratic<-function(X,Y){
+	#quadratic relation
+	model<- lm(Y ~X + I(X^2))
+	newX<- seq( min(X), max(X), by=0.00001)
+
+	plot(X,Y)
+	lines(xv, predict(model,list(pred=newx)))
+}
