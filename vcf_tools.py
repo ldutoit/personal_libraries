@@ -407,6 +407,7 @@ def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=100
 	if chrom!="all":
 			print chrom,start,end
 			check=len(sh.tabix(vcf_file,str(chrom)+":"+str(start)+"-"+str(end)))
+			#print  check
 			#print "check;' ",check,"'"
 			if check==0: 
 				return [0,0]
@@ -487,7 +488,7 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 		inds=input_vcf.samples
 	#print "in checkSnp_Cov nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
 	if not len(record.alleles) in nalleles: return False # check the number of alleles
-	print snps 
+	#print snps 
 	if snps==True and record.num_het == 0: return False
 	if "DP" in record.FORMAT:
 		if mincov==0 :# we want to avoid to take in the None that are 0 and prevent us to use the condition
@@ -530,10 +531,10 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 		count_snps = count_sites_under_condition_vcf(vcf_file_snps,a[0],a[1],a[2],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2],snps=True) # this line just serve as giving an extra info in the logs files
 
 	else:
-		print "enter 1"
+		#print "enter 1"
 		sum_pairwise = sum_pairwise_differences(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 	if max_nsites >= count_sites[0]>=min_nsites  :
-		print "enter 2"
+		#print "enter 2"
 		pi = sum_pairwise/count_sites[0]
 	else:
 		pi = "NA"
@@ -605,7 +606,6 @@ def calculate_pi_of_a_bed_double_vcf(bed,vcfsnps,vcf_allsites,mincov,maxcov,bgzi
 
 def pi_double_vcf_fix_nsites(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,min_nsites=0,max_nsites=10000000000,called=True):
 	'''
-	not curated anymore
 	'''
 	#print "pi_doublevcf() without subsampling"
 	#count_sites = count_sites_under_condition_vcf(vcf_allsites,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip)
