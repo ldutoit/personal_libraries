@@ -89,7 +89,16 @@ class WindowBed(object):
 		else:
 			raise Exception("invalid out argument, should be 'nb' or 'window'")
 
-
+	def no_overlap_listwindows(self,list_windows,verbose=True ):# 
+		''' check that the window has no overlap with a list of windows, return True if no overlap or False otherwise'''
+		win=self
+		if verbose==True: print( win)
+		nhits=0
+		bp=0
+		hits = []
+		for win_to_check in list_windows:
+			if win.overlap(win_to_check): return False
+		return True
 	def overlap_listwindows(self,list_windows,out="nb",verbose=True, col_interest = 4, col_weight  = None ):# retun number of hits or number of bp
 		"""for BED windows,  tools to overlap a window a list of windows.
 			

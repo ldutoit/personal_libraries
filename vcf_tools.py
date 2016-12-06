@@ -1,7 +1,7 @@
 #!/usr/bin/env python 2
 # Filename: vcf_tools.py
 try :
-	import pysam,numpy,os,vcf,random,sh
+	import pysam,numpy,os,vcf,random,sh,gzip
 except:
 	raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
 
@@ -53,6 +53,7 @@ def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 			print "\t".join(info)+"\n"
 			output.write("\t".join(info)+"\n")
 	output.close()
+
 
 
 def extract_features(vcf_file,feature,chrom,start,end,sampling_frequency=1,missing_data="None",bgzip=True,write=True,outfile=""):
@@ -620,11 +621,82 @@ def pi_double_vcf_fix_nsites(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0
 	return [pi,max_nsites,"NA"] # pi, nsites passing condition, total nsites
 
 
+def filtervcf(vcf_file,vcf_output,mincov=1,maxcov=10000,bgzip =True,inds="all",nb_ind_with_min_cov="all",nalleles=[1,2],snps=False):
+	''' filter a gzipped vcf'''
+	output_handle = gzip.open(vcf_output,"wb")
+	f = gzip.open(vcf_file)
+	for line in f:
+		if line.startswith("#"):
+			output_handle.write(line)
+		else:
+			break
+	input_vcf=vcf.Reader(fsock=None, filename=vcf_file, compressed=bgzip, prepend_chr="False", strict_whitespace=False)#open the vcf parser
+	for record in input_vcf:# for every site
+		cond=vcft.checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
+		if cond:
+			output_handle.write(line)
+			line = f.readline()
+		else:
+			line = f.readline()
+	output_handle.close()
 
 
+def create_vcf_from_annot(vcfinput,bed,annot,vcfoutput):
+	'''create a subset of vcfinput that contains only the sites mentionned
+	 in the bedfile associated to a given annotation in that file'''
+	# get the header
+	output_handle = gzip.open(vcfoutput,"wb")
+	with gzip.open(vcfinput) as f:
+		for line in f:
+			if line.startswith("#"):
+				output_handle.write(line)
+			else:
+				break
+	output_handle.close()
+	with open(bed) as f:
+		for line in f:
+			if annot in line:
+				os.system("tabix "+vcfinput+" "+line.split()[0]+":"+str(int(line.split()[1])+1)+"-"+str(line.split()[2])+" | gzip -c >> "+vcfoutput) 
+
+
+
+
+def count_sites_under_condition_vcf_to_set(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,nb_ind_with_min_cov="all",nalleles=[1,2],snps=False):
+	"""
+	return a set of a ll the sites in a vcf file that respect a certain condition that respect a certain condition
+	output a set
+
+	vcf_file #vcf_file
+	chrom="all"|scaf (str)# can be all and then end and start are disregarded the whole vcf is considered  
+	start# the start position (1 based)
+	end# the end position, inclusive
+	mincov=0# the min coverage for every ind to consider a site okay
+	maxcov=10000# he max coverage for every ind to consider a site okay
+	inds # a list of selected individuals. if inds="all" or ["alls"] consider every sample
+	bgzip=True# is the file bgzipped
+	nb_ind_with_min_cov="all" # the number of individuals that need at least mincov to call the site. If "all", it becomes the same as ind, If "all_vcf", it becomes all the individuals in the vcf  Not applicable to maxcov!
+	nalleles = [1,2]  the number of alleles the sites can have, in this case one or two, it is used to determine the amount of true variable sites out of snps positions
+	"""
+	set_ok_sites = {}
+	input_vcf=vcf.Reader(fsock=None, filename=vcf_file, compressed=bgzip, prepend_chr="False", strict_whitespace=False)#open the vcf parser
+	nsites_OK=0
+	nsites_total=0
+	#print "in count_sites_under_condition_vcf nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", ind
+	if chrom!="all":
+			print chrom,start,end
+			check=len(sh.tabix(vcf_file,str(chrom)+":"+str(start)+"-"+str(end)))
+			#print  check
+			#print "check;' ",check,"'"
+			if check==0: 
+				return [0,0]
+			for record in input_vcf.fetch(chrom,start,end):# for every site
+				cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
+				nsites_total+=1
+				if cond:# if it does
+					#if  any([int(sample['DP'])<5 for sample in record.samples]): print [int(sample['DP']) for sample in record.samples] # to check this argument nb_ind_with_min_cov
+					set_ok_sites.append(str(record.CHROM)+"_"+str(record.POS))
 
 def test():
 	pass
 
 test()
-

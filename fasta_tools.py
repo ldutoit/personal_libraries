@@ -12,6 +12,7 @@ except:
 file_scaf="/proj/b2010010/repos/assembly/fAlb15/linkage/fAlb15.chrom.strict.20140121.txt"
 file_chrom="/proj/b2010010/repos/assembly/fAlb15/fAlb15.chrom.fa"
 scaf_len="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len"
+
 class Assembly_scaff(object):
 	"""class to store info on assembly from scaffolds information. needs a file where every line is a scaffold ordered along chromosome with three columns:
 	chromosome, scaffold name, scaffold length  
@@ -64,6 +65,8 @@ for key in fAlb15.dict_chrom.keys():
 	total_length+=length_chrom
 #store scaf length for every scaffold in the assembly 
 
+
+
 def parse_fasta_to_dict(filename,output_format="string"):
 	''' parse a fasta file to a dictionnary of sequences with values being either seq objects from Biopython or string
 	 and keys being sequence_name
@@ -102,7 +105,7 @@ def exclude_lines_with_scaff(infile,outfile,list_scaff_to_exclude=fAlb15.dict_ch
 		for line in f:
 			i+=1
 			if i%nb_lines_log == 0: print i," lines done"
-			if not any([(to_exclude in line) for to_exclude in list_scaff_to_exclude]):
+			if not any([(to_exclude in line.split(" ")) for to_exclude in list_scaff_to_exclude]):
 				outf.write(line)		
 	outf.close()
 
