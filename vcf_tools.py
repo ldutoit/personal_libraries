@@ -359,7 +359,7 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 			 		del record.samples[index]
 			 	#print record.samples
 				nsites_ok+=1
-				print record.nucl_diversity
+				#print record.nucl_diversity
 				sum_pairwise+=record.nucl_diversity 
 			#compute total information for the window
 	elif chrom=="all":
@@ -632,7 +632,7 @@ def filtervcf(vcf_file,vcf_output,mincov=1,maxcov=10000,bgzip =True,inds="all",n
 			break
 	input_vcf=vcf.Reader(fsock=None, filename=vcf_file, compressed=bgzip, prepend_chr="False", strict_whitespace=False)#open the vcf parser
 	for record in input_vcf:# for every site
-		cond=vcft.checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
+		cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
 		if cond:
 			output_handle.write(line)
 			line = f.readline()
@@ -677,13 +677,13 @@ def count_sites_under_condition_vcf_to_set(vcf_file,chrom,start,end,mincov=0,max
 	nb_ind_with_min_cov="all" # the number of individuals that need at least mincov to call the site. If "all", it becomes the same as ind, If "all_vcf", it becomes all the individuals in the vcf  Not applicable to maxcov!
 	nalleles = [1,2]  the number of alleles the sites can have, in this case one or two, it is used to determine the amount of true variable sites out of snps positions
 	"""
-	set_ok_sites = {}
+	set_ok_sites = set()
 	input_vcf=vcf.Reader(fsock=None, filename=vcf_file, compressed=bgzip, prepend_chr="False", strict_whitespace=False)#open the vcf parser
 	nsites_OK=0
 	nsites_total=0
 	#print "in count_sites_under_condition_vcf nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", ind
 	if chrom!="all":
-			print chrom,start,end
+			#print chrom,start,end
 			check=len(sh.tabix(vcf_file,str(chrom)+":"+str(start)+"-"+str(end)))
 			#print  check
 			#print "check;' ",check,"'"
@@ -694,7 +694,88 @@ def count_sites_under_condition_vcf_to_set(vcf_file,chrom,start,end,mincov=0,max
 				nsites_total+=1
 				if cond:# if it does
 					#if  any([int(sample['DP'])<5 for sample in record.samples]): print [int(sample['DP']) for sample in record.samples] # to check this argument nb_ind_with_min_cov
-					set_ok_sites.append(str(record.CHROM)+"_"+str(record.POS))
+					set_ok_sites.add(str(record.CHROM)+"_"+str(record.POS))
+	return set_ok_sites
+
+def make_subset_bed_annot(input_bed,annot,output_bed):
+	''' create an output_bed file that is the subset of the input_bed
+	file that contains only the line that match the pattern  annot
+	'''
+	output = open(output_bed,"w")
+	with open(input_bed) as f:
+		for line in f:
+			if annot in line:
+				output.write(line)
+	output.close()
+
+def sum_pairwise_over_bed(vcf_file,bed,mincov=1,maxcov=10000,inds="all",bgzip=True,called=True,nb_ind_with_min_cov="all"):
+	''' function sum_pairwise_differences( see vcf_tools documentation) iterated over all regions in a bed file
+	return the sum of pairwise differences, and the number of sites considered
+	'''
+	sum_overall,nsites = 0,0
+	with open(bed) as f:
+		for line in f:
+			print int(line.split()[2])-int(line.split()[1]),line
+			seq,start,end = line.split()[0],int(int(line.split()[1])+1),int(line.split()[2])
+			temp = sum_pairwise_differences(vcf_file,chrom=seq,start = start,end = end ,mincov=mincov,maxcov=maxcov,inds= inds,bgzip=bgzip,called=called,output="extended",nb_ind_with_min_cov=nb_ind_with_min_cov)
+			sum_overall += temp [0]
+			nsites += temp[1]
+	return sum_overall,nsites
+
+
+
+
+def sites_under_condition_vcf_from_bed_to_set(bed,vcf_file,mincov=0,maxcov=10000,inds="all",bgzip=True,nb_ind_with_min_cov="all",nalleles=[1,2],snps=False):
+	''' a version of count_sites_under_condition_vcf that return a set for all sites respecting a condition that intersects with a bed'''
+	set_sites_ok = set()
+	with open(bed) as f:
+		for line in f:
+			seq,start,end = line.split()[0],int(int(line.split()[1])+1),int(line.split()[2])
+			temp_set =  count_sites_under_condition_vcf_to_set(vcf_file,seq,start,end,mincov=mincov,maxcov=maxcov,inds = inds,bgzip=bgzip,nb_ind_with_min_cov= nb_ind_with_min_cov ,nalleles= nalleles ,snps = snps)
+			new_set = set_sites_ok.union(temp_set) # add all the other sites
+			set_sites_ok = new_set
+	return set_sites_ok
+
+
+
+def condition_overlap_over_Multiplevcfs(bed,vcf_list =[],mincov=1,maxcov=10000,inds="all",bgzip=True,called=True,nb_ind_with_min_cov="all",nalleles= [1,2],snps=False):
+	''' a version of count_sites_under_condition_vcf that return a set for all sites respecting a condition across several vcfs  for regions defined in a  bed.
+	'''
+	set_sites_ok = sites_under_condition_vcf_from_bed_to_set(bed,vcf_list[0],mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=nalleles,snps=snps)
+	print vcf_list[0], len(set_sites_ok)
+	for vcf_file in vcf_list[1:]:
+		temp_set = sites_under_condition_vcf_from_bed_to_set(bed,vcf_file,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=nalleles,snps=snps) 
+		set_sites_ok = set_sites_ok.intersection(temp_set)
+		print vcf_file, len(temp_set)
+	return set_sites_ok
+
+#Special function used for SBE project
+
+
+def extract_pi_double_vcf_bed_for_several_beds_and_several_allsites_files(list_beds,vcf_snps,vcf_allsites_list,output_file,annot="",mincov=3,maxcov=10000,bgzip=True,called=True,nb_ind_with_min_cov="all"):
+	'''A Special function that is integrating many levels.  It derives from extract_pi_double_vcf_bed(). but it uses several allsites files not only 1 if the individals in the snps file are in different allsites vcfs.
+	It also use a lit file  list_beds that contains a lit of bedfiles that one want to caculate vcf for. In each of this file, only the line containing the string defined bu the parameter annot will be used.
+	NOTE: It has originally been used to calculate exonic diversity, each file in the list of file being a  gene'''
+	output_handle = open(output_file,"w")
+	with open(list_beds) as f:
+		for filename in f:
+			print filename+"\n"
+			filepath = filename.strip()
+			tempbed =  annot+"_"+os.path.basename(filepath)
+			make_subset_bed_annot(filepath,annot,tempbed)
+			print "summing"
+			sums = sum_pairwise_over_bed(vcf_snps,tempbed,mincov=mincov,maxcov=maxcov,inds="all",bgzip=True,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
+			print "iterating overallsites"
+			sites = condition_overlap_over_Multiplevcfs(tempbed,vcf_allsites_list ,mincov=mincov,maxcov=maxcov,inds="all",bgzip=True,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
+			if len(sites)>0:
+				pi = sums[0]/len(sites)
+			else:
+				pi=  "na"
+			 	sites = 0
+			output_handle.write("\t".join([filepath,str(pi),str(sites),"\n"]))
+			os.system("rm "+tempbed)
+	output_handle.close()
+
 
 def test():
 	pass
