@@ -1,5 +1,5 @@
 #!/usr/bin/env python 2
-# Filename: vcf_tools.py
+#Filename: vcf_tools.py
 try :
 	import pysam,numpy,os,vcf,random,sh,gzip
 except:
@@ -767,12 +767,13 @@ def extract_pi_double_vcf_bed_for_several_beds_and_several_allsites_files(list_b
 			sums = sum_pairwise_over_bed(vcf_snps,tempbed,mincov=mincov,maxcov=maxcov,inds="all",bgzip=True,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
 			print "iterating overallsites"
 			sites = condition_overlap_over_Multiplevcfs(tempbed,vcf_allsites_list ,mincov=mincov,maxcov=maxcov,inds="all",bgzip=True,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
+			#print sites
 			if len(sites)>0:
 				pi = sums[0]/len(sites)
 			else:
 				pi=  "na"
-			 	sites = 0
-			output_handle.write("\t".join([filepath,str(pi),str(sites),"\n"]))
+			 	sites = ""
+			output_handle.write("\t".join([filepath,str(pi),str(len(sites)),"\n"]))
 			os.system("rm "+tempbed)
 	output_handle.close()
 
