@@ -777,6 +777,26 @@ def extract_pi_double_vcf_bed_for_several_beds_and_several_allsites_files(list_b
 			os.system("rm "+tempbed)
 	output_handle.close()
 
+def subsample_vcfgz(input_file,list_file,output_file):
+	''' subsample a vcf to a given set of samples, using a list of individuals( one ind name per line, 
+	an input file and an output file ( both compressed)'''
+	output_handle = gzip.open(output_file,"wb")
+	inds  =  [ line.strip() for line in open(input_list,"r") ]
+	print "samples are", inds
+	with gzip.open(input_file,"rb") as f:
+		for line in f:
+			if not line.startswith("#"): # this is all non-header, I check that first to avoid going through all conds
+				#i=0
+				info = line.split()
+				output_handle.write("\t".join(list( info[i] for i in indexes ))+"\n")
+			elif line.startswith("##"):
+				output_handle.write(line)
+			elif line.startswith("#C"):
+				indexes = range(9)+[index for index,pos in enumerate(line.split()) if line.split()[index] in inds]
+				assert len(indexes) == 9+len(inds) # check that you find all inds in the inds list in the file
+				info = line.split()
+				output_handle.write("\t".join(list( info[i] for i in indexes ))+"\n") 
+	output_handle.close()
 
 def test():
 	pass
