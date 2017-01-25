@@ -781,7 +781,7 @@ def subsample_vcfgz(input_file,list_file,output_file):
 	''' subsample a vcf to a given set of samples, using a list of individuals( one ind name per line, 
 	an input file and an output file ( both compressed)'''
 	output_handle = gzip.open(output_file,"wb")
-	inds  =  [ line.strip() for line in open(input_list,"r") ]
+	inds  =  [ line.strip() for line in open(list_file,"r") ]
 	print "samples are", inds
 	with gzip.open(input_file,"rb") as f:
 		for line in f:
