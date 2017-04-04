@@ -1,13 +1,16 @@
 #!/usr/bin/env python2
 # Filename: windows_tools.py
-
-try :
-	import os,sys,vcf,pysam
-	import numpy as np 
-	import filecmp 
-except:
-	raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nsys\nvcf\nfilecmp")
-
+#I try to import the modules several time because it appeared several times that the import fail due to other parralel import when running several parralel instances of the same script.
+for i in range(0,100):
+    while True:
+        try:
+			import os,sys,vcf,pysam
+			import numpy as np 
+			import filecmp 
+        except :
+            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
+        break
+        
 class WindowBed(object):
 	""" a class to define genomic interval, each object has to be defined by at least a seq and two of the three following parameters: start,end,len. 
 	The third is inferred
@@ -100,7 +103,7 @@ class WindowBed(object):
 			if win.overlap(win_to_check): return False
 		return True
 	def overlap_listwindows(self,list_windows,out="nb",verbose=True, col_interest = 4, col_weight  = None ):# retun number of hits or number of bp
-		"""for BED windows,  tools to overlap a window a list of windows.
+		"""for BED windows,  tools to overlap a window a list of windows. SEE ovarlap_two_list_windows for directly compared two windows list
 			
 		list_windows  # the list of windows you want to check for overlaps 
 
@@ -487,4 +490,26 @@ def bed_calculate_weighted_average(bed,intersectwith,output_file,col_interest=4,
 
 import doctest
 doctest.testmod()
+
+
+def overlap_two_list_windows(list1,list2):
+	'''return a list of pairs overlaps between two list of WindowBed objects [[win1,win2],[win1,win2]]'''
+	# create a dictionnary of list2 by sequence
+	window_dict= {}
+	for win in list2:
+		if win.seq in window_dict.keys():
+			window_dict[win.seq].append(win)
+		else:
+			window_dict[win.seq] = [win]
+	#create a list of overlap using the windows
+	overlaps = []
+	i=0
+	for win in list1:
+		i+=1
+		print "win number",i
+		a = win.overlap_listwindows(window_dict[win.seq],out="list")
+		if len(a)>1: 
+			for overlap in a:
+				overlaps.append([win,overlap])
+	return overlaps
 

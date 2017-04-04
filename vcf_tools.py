@@ -1,9 +1,15 @@
 #!/usr/bin/env python 2
 #Filename: vcf_tools.py
-try :
-	import pysam,numpy,os,vcf,random,sh,gzip
-except:
-	raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
+
+
+#I try to import the modules several time because it appeared several times that the import fail due to other parralel import when running several parralel instances of the same script.
+for i in range(0,100):
+    while True:
+        try:
+           	import pysam,numpy,os,vcf,random,sh,gzip,pdb
+        except :
+            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
+        break
 
 #sample_vcfgz=os.path.dirname(__file__)+"/test_files/sample_allsites.vcf.gz" # alternatively sample_vcfgz= "/home/ludovic/repos/personal_libs/test_files/sample_allsites.vcf.gz"
 #sample_vcf=os.path.dirname(__file__)+"/test_files/sample_allsites.vcf.gz" # alternatively sample_vcf = "/home/ludovic/repos/personal_libs/test_files/sample_allsites.vcf"
@@ -351,7 +357,11 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 				return [0,0]
 		for record in input_vcf.fetch(chrom,start,end):# for every site
 			#print "HERE"
+			#print input_vcf,record,mincov,maxcov, inds, nb_ind_with_min_cov
+			#raise Exception
 			cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=[1,2],nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
+			print inds
+
 			#print "cond",cond
 			#print "HERE2"
 			if cond:# if it does
@@ -360,6 +370,7 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 			 	#print record.samples
 				nsites_ok+=1
 				#print record.nucl_diversity
+				print "samples pairwise", len(record.samples),record.nucl_diversity 
 				sum_pairwise+=record.nucl_diversity 
 			#compute total information for the window
 	elif chrom=="all":
@@ -412,10 +423,12 @@ def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=100
 			#print "check;' ",check,"'"
 			if check==0: 
 				return [0,0]
-			for record in input_vcf.fetch(chrom,start,end):# for every site
+			for record in input_vcf.fetch(chrom,start,end):
+				#print record# for every site
 				cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=nalleles,nb_ind_with_min_cov=nb_ind_with_min_cov,snps=snps)# check if the site respect our condition
 				nsites_total+=1
 				if cond:# if it does
+					#raise Exception
 					#if  any([int(sample['DP'])<5 for sample in record.samples]): print [int(sample['DP']) for sample in record.samples] # to check this argument nb_ind_with_min_cov
 					nsites_OK+=1
 	elif chrom=="all":
@@ -478,7 +491,7 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 	"""
 	###Checks
 	#print "in checkSnp_Cov nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
-
+	#pdb.set_trace()
 	if type(input_vcf)!=vcf.parser.Reader: raise Exception ("input_vcf must be a parser.Reader object")
 	if type(record)!=vcf.model._Record: raise Exception ("record must be a  vcf.model._Record object")
 	#function
@@ -489,14 +502,20 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 		inds=input_vcf.samples
 	#print "in checkSnp_Cov nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
 	if not len(record.alleles) in nalleles: return False # check the number of alleles
-	#print snps 
+	#print snps
+	# check all inds in parameters are in the vcf
+	if not all([ind in input_vcf.samples  for ind in inds]): 
+		print set(inds).difference(set(input_vcf.samples)), "are in the sample but not in the vcf"
+		raise Exception
 	if snps==True and record.num_het == 0: return False
 	if "DP" in record.FORMAT:
 		if mincov==0 :# we want to avoid to take in the None that are 0 and prevent us to use the condition
 			cond=all([ ind["DP"]<=maxcov for ind in record.samples if ind["DP"]!=None and (ind.sample in inds) ]) 
 		else: # we need to take into account the none cause they mean DP=0 and cond=False
 			#print [mincov<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)   
+			#pdb.set_trace()
 			cond=nb_ind_with_min_cov<=[mincov<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)   
+			#print "check_cov", len(inds)
 	else:
 		cond=False#raise Exception ("format do not include DP for",record.POS,record.CHROM)
 	#if cond==True: print [sample["DP"] for sample in record.samples if (sample.sample in inds)]
@@ -522,7 +541,9 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 
 	'''
 	#print "pi_doublevcf() without subsampling"
+	print "count_sites"
 	count_sites = count_sites_under_condition_vcf(vcf_allsites,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
+	print "count_snps"
 	count_snps = count_sites_under_condition_vcf(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov,nalleles=[2],snps=True) # this line just serve as giving an extra info in the logs files
 	#print "pi_double_vcf()sum pairwise"
 	if count_sites[0] >max_nsites:
@@ -536,6 +557,7 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 		sum_pairwise = sum_pairwise_differences(vcf_file_snps,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
 	if max_nsites >= count_sites[0]>=min_nsites  :
 		#print "enter 2"
+		print "sum_pairwise"
 		pi = sum_pairwise/count_sites[0]
 	else:
 		pi = "NA"
