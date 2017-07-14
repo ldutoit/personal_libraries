@@ -1,15 +1,17 @@
-#!/usr/bin/env python 2
+ #!/usr/bin/env python 2
 #Filename: vcf_tools.py
-
-
 #I try to import the modules several time because it appeared several times that the import fail due to other parralel import when running several parralel instances of the same script.
-for i in range(0,100):
-    while True:
-        try:
-           	import pysam,numpy,os,vcf,random,sh,gzip,pdb
-        except :
-            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
-        break
+tries = 1000
+for i in range(tries):
+    try:
+    	#print i
+        import pysam,numpy,os,vcf,random,sh,gzip,pdb,math
+    except :
+        if i < tries - 1: # i is zero indexed
+            continue
+        else:
+            raise
+    break
 
 #sample_vcfgz=os.path.dirname(__file__)+"/test_files/sample_allsites.vcf.gz" # alternatively sample_vcfgz= "/home/ludovic/repos/personal_libs/test_files/sample_allsites.vcf.gz"
 #sample_vcf=os.path.dirname(__file__)+"/test_files/sample_allsites.vcf.gz" # alternatively sample_vcf = "/home/ludovic/repos/personal_libs/test_files/sample_allsites.vcf"
@@ -30,6 +32,7 @@ def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 	min_nsites=10000 # the minimum number of valid sites in any given window for pi to be estimated, if less return NA
 	called=True # all individuals should be assigned a genotype (for SNPs)
 	nb_ind_with_min_cov="all"  # the number of individuals in "inds" that should have the mincov for a given site, by default all individuals#
+	The function get_average_pi_from_bed_output_vcf_tools() parse the output file to summarize it to one pi_value if needed
 	'''
 	if uppmax == True:
 		scratch_folder = os.environ.get("SNIC_TMP")
@@ -53,7 +56,7 @@ def extract_pi_double_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 		for line in f:
 			info = line.split()
 			count = pi_double_vcf(vcf_snps,vcf_allsites,line.split()[0],int(line.split()[1])+1,int(line.split()[2]),mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,min_nsites=min_nsites,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
-			info.append(str(count[0]))#sum_pairwise
+			info.append(str(count[0]))#pi
 			info.append(str(count[1]))#number of ok sites
 			info.append(str(count[3]))#number of snps
 			print "\t".join(info)+"\n"
@@ -361,17 +364,19 @@ def sum_pairwise_differences(vcf_file,chrom,start,end,mincov=0,maxcov=10000,inds
 			#raise Exception
 			cond=checkSnp_Cov(input_vcf,record,mincov,maxcov,inds=inds,nalleles=[1,2],nb_ind_with_min_cov=nb_ind_with_min_cov)# check if the site respect our condition
 			print inds
-
 			#print "cond",cond
 			#print "HERE2"
 			if cond:# if it does
+			 	b= record.nucl_diversity
 			 	for index in  sorted(inds_to_delete)[::-1]:#remove the individuals we do not want
 			 		del record.samples[index]
+			 		#print record.nucl_diversity
 			 	#print record.samples
 				nsites_ok+=1
 				#print record.nucl_diversity
 				print "samples pairwise", len(record.samples),record.nucl_diversity 
 				sum_pairwise+=record.nucl_diversity 
+				#if b!=record.nucl_diversity : print " old and new diversity", b,record.nucl_diversity
 			#compute total information for the window
 	elif chrom=="all":
 		for record in input_vcf:# for every site
@@ -507,8 +512,11 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 	if not all([ind in input_vcf.samples  for ind in inds]): 
 		print set(inds).difference(set(input_vcf.samples)), "are in the sample but not in the vcf"
 		raise Exception
-	if snps==True and record.num_het == 0: return False
+	if snps==True: 
+		if not any([ind.is_het for ind in record.samples if ind.sample in inds])  : 
+			return False # not an heterozygous site 
 	if "DP" in record.FORMAT:
+		print len([ind for  ind in record.samples if ind.sample in  inds]),"inds"
 		if mincov==0 :# we want to avoid to take in the None that are 0 and prevent us to use the condition
 			cond=all([ ind["DP"]<=maxcov for ind in record.samples if ind["DP"]!=None and (ind.sample in inds) ]) 
 		else: # we need to take into account the none cause they mean DP=0 and cond=False
@@ -518,6 +526,7 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 			#print "check_cov", len(inds)
 	else:
 		cond=False#raise Exception ("format do not include DP for",record.POS,record.CHROM)
+	#check that this one is variable!
 	#if cond==True: print [sample["DP"] for sample in record.samples if (sample.sample in inds)]
 	#if cond==True: assert 8<=[5<= ind["DP"]<=maxcov and ind.called==True for ind in record.samples  if (ind.sample in inds)].count(True)," very ugly.... just to check that 1 individual is okay for 7 reads and that I check that all along"
 	return cond
@@ -562,6 +571,7 @@ def pi_double_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=100
 	else:
 		pi = "NA"
 	print "pi_double_vcf()",pi,"nsites_ok",count_sites[0],"win_len",count_sites[1] ,end-start
+	print [pi,count_sites[0],count_sites[1],count_snps[0]]
 	return [pi,count_sites[0],count_sites[1],count_snps[0]] # pi, nsites passing condition, nsites, nsnps
 
 def subsample_to_X_callable_sites(vcf_file,chrom,start,end,max_nsites,mincov,maxcov,inds,bgzip=True,nb_ind_with_min_cov="all"):
@@ -819,6 +829,146 @@ def subsample_vcfgz(input_file,list_file,output_file):
 				info = line.split()
 				output_handle.write("\t".join(list( info[i] for i in indexes ))+"\n") 
 	output_handle.close()
+
+
+
+def parce_vcftools_fst(file,exception=True,remove_ext = False) :
+	''' This function parse fsts output of vcf_tools as a dictionnary with input_file as key
+		and mean Fst and weighted Fst as values.
+		if exception ==true an "error" in the file will stop the function
+		if exception
+		 ==false an "error" in the file will only ignore the record and continue
+		if remove_ext ==True the key become what is before the "." in the filename
+		'''
+	ngene =0
+	dict_fsts = {}
+	fsts_handle = open(file,"r")
+	fsts_raws = fsts_handle.read().split("VCFtools - 0.1.15")[1:] # get a list fof records
+	if len(fsts_raws) == 1 : raise Warning(" Check that the version of vcftools is 0.1.15 or that that you have more than 1 fst in your file")
+	print "parsing", len(fsts_raws),"records"
+	for record in fsts_raws:
+		if "Error" in record.split()[-8]: 
+			if exception == True : raise Exception
+			continue # if not exception = True
+		ngene+=1
+		input_filename = "_".join(record.split("\n")[4].split()[1].split("_")[2:])
+		print input_filename
+		if remove_ext ==True: input_filename = input_filename.split(".")[0]
+		meanFst = record.split("\n")[14].split()[-1]
+		weightedFst = record.split("\n")[15].split()[-1]
+		if input_filename in dict_fsts.keys():
+			raise Exception
+		else:
+			dict_fsts [input_filename] = [meanFst]
+		dict_fsts[input_filename].append(weightedFst)
+	return dict_fsts
+
+
+
+def subset_vcf_from_list_of_snps(inputvcf,outputvcf,listsnps):
+	''' subset the inputvcf to outputvcf keeping only the sites in list of format[ ["Chr1_1" ,"Chr1_2", ...]'''
+	output = open(outputvcf,"w")
+	#write the headers
+	print "writing headers"
+	with open(inputvcf) as f:
+		for line in f:
+			if line.startswith("#"):
+				output.write(line)
+			else:
+				break
+	output.close()
+	print "writing snps"	
+	#write the snps
+	j=0
+	for pos in listsnps:
+		j+=1
+		if j%100==0:print j,"snps"
+		scaf,snp = pos.split("_")
+		os.system("tabix "+ inputvcf+" "+scaf+":"+snp+"-"+snp+" >> "+outputvcf)
+	output.close()
+
+
+def output_snps_intersection(vcf1,vcf2,numberofsnps,output_prefix ="vcf/",ext="",nrep=1):
+	''' output two vcfs that are subsets of vcf1 and vcf2 that contains exactly the same numberofsnps
+	number of snps can be a list or an integer, the output will be named vcf1,+"_sample_"+NUMBEROFSNP+"_snps.vcf" and vcf1,+"_sample_"+NUMBEROFSNP+"_snps.vcf
+	Add ext at the end of the output_files multiple files with the same number of snps
+	Ourput prefix is used as an output_folder for example"'''
+
+	#create a tempfolder
+	randomnumber =  str(random.random())[0:7]
+	output_folder = randomnumber+"temp"
+	os.mkdir(output_folder)
+	#identify snp in first vcf
+	print "collect_sites vcf 1"
+	#print start the set
+	set_vcf1 = set([])
+	with gzip.open(vcf1) as f:
+		for line in f:
+			if not line.startswith("#"):
+				set_vcf1.add("_".join(line.strip().split()[:2]))
+	print "collect_sites vcf 2"
+	set_vcf2 = set([])
+	with gzip.open(vcf2) as f:
+		for line in f:
+			if not line.startswith("#"):
+				set_vcf2.add("_".join(line.strip().split()[:2]))
+	#find the intersection
+	intersection_snps = set_vcf1.intersection(set_vcf2)
+	print len(intersection_snps),"SNPs are in both files"
+	if type(numberofsnps)==int:numberofsnps = [numberofsnps]
+	if type(numberofsnps)!=list:raise Exception
+	if max(numberofsnps)>len(intersection_snps): raise Exception("not enough SNPs to sample")
+	for number in numberofsnps:
+		for rep in range(1,nrep+1):
+			sample = random.sample(intersection_snps,number)
+			##check that no two sample are within X of each other
+			#print sample
+			print "number of SNPs present in both vcfs:"+str(len(intersection_snps))+"\n"
+			print "WRITING",str(number)," TO OUTPUTFILES; Subset from",str(len(intersection_snps)),"SNPS"
+			print sample
+			output1 = output_prefix+"/"+os.path.basename(vcf1[:-7])+"_sample_"+str(number)+"_"+ext+"rep"+str(rep)+"_snps.vcf"
+			output2 = output_prefix+"/"+os.path.basename(vcf2[:-7])+"_sample_"+str(number)+"_"+ext+"rep"+str(rep)+"_snps.vcf"
+			subset_vcf_from_list_of_snps(vcf1,output1,sample)
+			subset_vcf_from_list_of_snps(vcf2,output2,sample)
+
+
+
+def get_average_pi_from_bed_output_vcf_tools(filename,verbose=False):
+	'''return pi and total number of sites of any output file from the function : extract_pi_double_vcf_bed() in this package'''
+	with open(filename) as f:
+		sum_pairwise = 0
+		n_sites =0
+		for line in f:
+			info = line.split()
+			if int(info[-2])!=0:
+				sum_pairwise+=float(info[-3])*float(info[-2])
+				n_sites+=float(info[-2])
+		if n_sites!=0:
+			pi=sum_pairwise/n_sites
+		else:
+			pi= "NA"
+		if verbose :print "pi",pi,"n valid sites",n_sites
+		return [pi,n_sites]
+
+
+def get_WattTheta_pi_from_bed_output_vcf_tools(filename,n_diploid_inds,verbose=False):
+	'''return the watterson estimator and total number of sites of any output file from the function : extract_pi_double_vcf_bed() in this package
+	IMPORTANT: it should be ninds individudals for each site!'''
+	with open(filename) as f:
+		n_variants = 0
+		n_sites =0
+		for line in f:
+			info = line.split()
+			if int(info[-2])!=0:
+				n_variants+=float(info[-1])
+				n_sites+=float(info[-2])
+		if n_sites!=0:
+			harmonic_mean = sum([1/float(x) for x in range(1,n_diploid_inds*2)]) # the minus 1 is directly done becaus of the nature of range()
+			watt_theta= (float(n_variants)/harmonic_mean)/n_sites
+		else:
+			watt_theta= 0
+		if verbose :print "theta",watt_theta,"n variants",n_variants,"n_sites",n_sites
+		return [watt_theta,n_variants,n_sites]
 
 def test():
 	pass

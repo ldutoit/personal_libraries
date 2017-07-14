@@ -1,14 +1,14 @@
 #!/usr/bin/env python2
 # Filename: windows_tools.py
 #I try to import the modules several time because it appeared several times that the import fail due to other parralel import when running several parralel instances of the same script.
-for i in range(0,100):
+for i in range(0,1000):
     while True:
         try:
 			import os,sys,vcf,pysam
 			import numpy as np 
 			import filecmp 
         except :
-            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh")
+            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh"+str(i))
         break
         
 class WindowBed(object):

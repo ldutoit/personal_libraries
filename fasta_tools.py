@@ -10,6 +10,7 @@ except:
 ###put the  the scaffolds in the assembly into a dictionnary 
 
 file_scaf="/proj/b2010010/repos/assembly/fAlb15/linkage/fAlb15.chrom.strict.20140121.txt"
+file_scafall =  "/proj/b2010010/private/Linkage/fAlb15_chromosomes_withIntermediates_FLIPPED_20130221.txt"	#contained unoriented and unlocalised scaffolds
 file_chrom="/proj/b2010010/repos/assembly/fAlb15/fAlb15.chrom.fa"
 scaf_len="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len"
 
@@ -17,10 +18,13 @@ class Assembly_scaff(object):
 	"""class to store info on assembly from scaffolds information. needs a file where every line is a scaffold ordered along chromosome with three columns:
 	chromosome, scaffold name, scaffold length  
 	"""
-	def __init__ (self,file_scaf):
+	def __init__ (self,file_scaf,file_scafall):
 		self.file_scaf=file_scaf
+		self.file_scafall = file_scafall
 		self.dict_chrom={}
+		self.dict_chromall = {}
 		self.dict_scaf={}
+		#scaffolds strictly oriented and loclised
 		with open (self.file_scaf,"r") as f:
 			for line in f:
 				self.dict_scaf[line.split()[1]]=windows_tools.WindowBed(seq=line.split()[1],start=0,length=line.split()[2])
@@ -32,6 +36,13 @@ class Assembly_scaff(object):
 		with open(scaf_len) as f:
 			for line in f:
 				self.dict_scaf_length[line.split()[0]]=line.split()[1]
+		#all scaffolds including unlocalised and unoriented
+		with open (self.file_scafall,"r") as f:
+			for line in f:
+				if line.split()[0] in self.dict_chromall.keys(): 
+				 	self.dict_chromall[line.split()[0]].append(str(line.split()[1]))
+				else:
+				 	self.dict_chromall[line.split()[0]]=[line.split()[1]]
 
 RNA_codon_table = {
 'UUU': 'Phe', 'UCU': 'Ser', 'UAU': 'Tyr', 'UGU': 'Cys', 'UUC': 'Phe', 'UCC': 'Ser', 'UAC': 'Tyr', 'UGC': 'Cys', 'UUA': 'Leu', 'UCA': 'Ser', 'UAA': '---', 'UGA': '---', 'UUG': 'Leu', 'UCG': 'Ser', 'UAG': '---', 'UGG': 'Urp',
@@ -44,7 +55,7 @@ RNA_codon_table = {
 
 
 #store info on assembly fAlb15
-fAlb15=Assembly_scaff(file_scaf="/proj/b2010010/repos/assembly/fAlb15/linkage/fAlb15.chrom.all.20140121.txt")
+fAlb15=Assembly_scaff(file_scaf=file_scaf,file_scafall=file_scafall)
 
 
 dict_scaf_len={}
