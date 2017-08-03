@@ -1,9 +1,9 @@
  #!/usr/bin/env python 2
-#Filename: afs_stats.py
+#Filename: afs_stats.py Developped with the help of Paulina Bolivar.
 
 import numpy 
 
-def asf_basic_stats(afs):
+def afs_basic_stats(afs):
 	''' 
 	Calculate Tajima's D,theta watterson and nucleotide diversity from the allele frequency spectrum.
 	Input: the site frequency spectrum as a list for x chromosmes:
@@ -11,10 +11,10 @@ def asf_basic_stats(afs):
 	It works for both folded and unfolded site frequency spectrum but has to define x to -1 chromosomes in the list. 
 	It returns, pi, theta watterson and TajD
 	Example:
-	>>> asf_basic_stats([10,9,8,7,6,200]) ## unfolded spectrum for si chromosomes with 200 valid sites
-	Out[1]: 0.093333333333333338
-	>>> asf_basic_stats([16,16,8,0,0,200]) ## unfolded spectrum for si chromosomes with 200 valid sites
-	Out[2]: 0.093333333333333338
+	>>> afs_basic_stats([10,9,8,7,6,200]) ## unfolded spectrum for si chromosomes with 200 valid sites
+	Out[1]: (0.093333333333333338, 0.08759124087591241, 0.0020911421903314943)
+	>>> afs_basic_stats([16,16,8,0,0,200]) ## unfolded spectrum for si chromosomes with 200 valid sites
+	Out[2]: (0.093333333333333338, 0.08759124087591241, 0.0020911421903314943)
 	'''
 	mythetaW = afs_thetaW(afs) # calculate Theta Watterson
 	mypi = afs_nucl_diversity(afs) # calculate nucleotide diversity

@@ -1,6 +1,6 @@
 # Personal libraries
 
-This repository contain library that I am using regularly in my code. 
+This repository contains libraries that I am using regularly in my code. 
 Some of it is specific to the UPPMAX cluster system in Uppsala.
 For any questions, please email dutoit.ludovic@gmail.com
 
