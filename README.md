@@ -31,10 +31,10 @@ Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic 
 ## personal_bincommands
 Contains small bin commands. help is always available woth the "-h flag"
 
-sortbig_bed_vcf.sh ### sort a big bed or vcf file
-faSplit ## split a fasta file into small files ( developped by UCSC)
-maf_convert.py # convert multple alignemtne format maf and psl ( developped by UCSC)
-swap_min_max.py # used to swap column to have always the first one with the min and the second one with the max
+**sortbig_bed_vcf.sh** sort a big bed or vcf file
+**faSplit**  split a fasta file into small files ( developped by UCSC)
+**maf_convert.py**  convert multple alignemtne format maf and psl ( developped by UCSC)
+**swap_min_max.py**  used to swap column to have always the first one with the min and the second one with the max
 
 
 ## fasta_tools.py
