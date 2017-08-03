@@ -13,20 +13,20 @@ Python library that contain tools to work with bedfiles and extract features, in
 ## vcf_tools.py
 Python library used to process vcf during my PhD. Some of the main functions:
 
-*extract_pi_double_vcf_bed*
+**extract_pi_double_vcf_bed**
 Append pi information line by line to a bed file. It uses two vcfs as input ( one for genotypes, and one for depth at all sites)
 
-*count_sites_under_condition_vcf*
+**count_sites_under_condition_vcf**
 Check the number of sites that respect a condition for a sub part of a vcf file.
 
-*all_freq_spectrum_vcf_bed*
+**all_freq_spectrum_vcf_bed**
 Append the folded allele frequency spectrum information line by line to a bed file filtering the vcf file according to user based conditions. It uses two vcfs as input ( one for genotypes, and one for depth at all sites)( one for genotypes, and one for depth at all sites)
 
 
 
 ## afs_stats.py
 
-Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic frequency spectrum. The main function is *afs_stats.py*.
+Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic frequency spectrum. The main function is **afs_stats**.
 
 ## personal_bincommands
 Contains small bin commands. help is always available woth the "-h flag"
