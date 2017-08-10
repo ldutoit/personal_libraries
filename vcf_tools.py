@@ -1024,6 +1024,8 @@ def get_WattTheta_pi_from_bed_output_vcf_tools(filename,n_diploid_inds,verbose=F
 		return [watt_theta,n_variants,n_sites]
 
 
+
+	#print "pi_doublevcf() without subsampling"
 def all_freq_spectrum_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,min_nsites=0,max_nsites=10000000000,called=True,nb_ind_with_min_cov="all"):
 	''' calculate all_freq_spectrum_vcf  of a region using two vcfs, one for SNPs and one for allsites ( could be the same vcf)
 
@@ -1042,8 +1044,6 @@ def all_freq_spectrum_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,ma
 	nb_ind_with_min_cov="all"  # the number of individuals in "inds" that should have the mincov for a given site, by default all individuals#
 
 	'''
-	#print "pi_doublevcf() without subsampling"
-def all_freq_spectrum_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,maxcov=10000,inds="all",bgzip=True,min_nsites=0,max_nsites=10000000000,called=True,nb_ind_with_min_cov="all"):
 	print vcf_allsites,vcf_file_snps
 	print "count_sites"
 	count_sites = count_sites_under_condition_vcf(vcf_allsites,chrom,start,end,mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,nb_ind_with_min_cov=nb_ind_with_min_cov)
