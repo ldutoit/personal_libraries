@@ -887,7 +887,7 @@ def subsample_vcfgz(input_file,list_file,output_file):
 
 def parce_vcftools_fst(file,exception=True,remove_ext = False) :
 	''' This function parse fsts output of vcf_tools as a dictionnary with input_file as key
-		and mean Fst and weighted Fst as values.
+		and mean Fst and weighted Fst (in order) as values.
 		if exception ==true an "error" in the file will stop the function
 		if exception
 		 ==false an "error" in the file will only ignore the record and continue
