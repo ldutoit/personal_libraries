@@ -116,9 +116,9 @@ def count_sites_under_condition_vcf(vcf_file,chrom,start,end,mincov=0,maxcov=100
 				nsites_OK+=1
 	return [nsites_OK,nsites_total]
 
-def all_freq_spectrum_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=10000,inds="all",bgzip=True,min_nsites=10000,called=True,nb_ind_with_min_cov="all",uppmax=False):
-	'''append all_freq_spectrum_vcf_bed information window by window to a bed file, for parameters information refers to the functions called
-
+def all_freq_spectrum_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=10000,inds="all",bgzip=True,min_nsites=10000,called=True,nb_ind_with_min_cov="all",uppmax=False,sep=","):
+	'''append all_freq_spectrum_vcf_bed information window by window to a bed file, the foldef allelic frequency spectrum consist of (n/2) alleles categories corresponding to the number of alternate alleles. The n_valid sites is appended as a last field for parameters information refers to the functions called
+	the
 	vcf_snps # the path the the snps files
 	vcf_allsites # the path to the allsites files
 	bed # the bed containing the window for which you want the sites
@@ -130,6 +130,7 @@ def all_freq_spectrum_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 	min_nsites=10000 # the minimum number of valid sites in any given window for pi to be estimated, if less return NA
 	called=True # all individuals should be assigned a genotype (for SNPs)
 	nb_ind_with_min_cov="all"  # the number of individuals in "inds" that should have the mincov for a given site, by default all individuals#
+	sep is the field separator of all the categories, by default the field separator is a comma such as the sfs become one extra column in a tab delimited file
 	'''
 	if uppmax == True:
 		scratch_folder = os.environ.get("SNIC_TMP")
@@ -154,7 +155,7 @@ def all_freq_spectrum_vcf_bed(vcf_snps,vcf_allsites,bed,output,mincov=5,maxcov=1
 			info = line.split()
 			print  vcf_snps,vcf_allsites
 			count = all_freq_spectrum_vcf(vcf_snps,vcf_allsites,line.split()[0],int(line.split()[1])+1,int(line.split()[2]),mincov=mincov,maxcov=maxcov,inds=inds,bgzip=bgzip,min_nsites=min_nsites,called=True,nb_ind_with_min_cov=nb_ind_with_min_cov)
-			info.append( ",".join(str(x) for x in count[0]))#sfs
+			info.append( sep.join(str(x) for x in count[0]))#sfs
 			info.append(str(count[1]))#number of ok sites
 			#print "\t".join(info)+"\n"
 			output.write("\t".join(info)+"\n")
@@ -549,7 +550,7 @@ def checkSnp_Cov(input_vcf,record,mincov=0,maxcov=100000000,inds="all",nalleles=
 	###Checks
 	#print "in checkSnp_Cov nb_ind_with_min_cov :",nb_ind_with_min_cov, " inds", inds
 	#pdb.set_trace()
-	print "check", input_vcf.filename
+	#print "check", input_vcf.filename
 	if type(input_vcf)!=vcf.parser.Reader: raise Exception ("input_vcf must be a parser.Reader object")
 	if type(record)!=vcf.model._Record: raise Exception ("record must be a  vcf.model._Record object")
 	#function
@@ -1065,7 +1066,7 @@ def all_freq_spectrum_vcf(vcf_file_snps,vcf_allsites,chrom,start,end,mincov=0,ma
 		sfs =all_freq_spectrum[0]
 		nsites_ok = all_freq_spectrum[1]
 	else:
-		sfs = "NA"
+		sfs = [0]*(len(inds))
 	print "all_freq_spectrum_vcf()",count_sites[0],"nsites_ok, sfs:",sfs
 	return [sfs,count_sites[0],	count_snps[0]] # this line just serve as giving an extra info in the logs files] # pi, nsites passing condition, nsites, nsnps
 
