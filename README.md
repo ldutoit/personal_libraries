@@ -29,7 +29,7 @@ Append the folded allele frequency spectrum information line by line to a bed fi
 Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic frequency spectrum. The main function is **afs_stats**.
 
 ## personal_bincommands
-Contains small bin commands. help is always available woth the "-h flag"
+Contains small bin commands gathered from different places. help is always available with the "-h flag"
 
 **sortbig_bed_vcf.sh** sort a big bed or vcf file.
 
@@ -51,5 +51,8 @@ contains some basic shortcuts I use to plots in R
 
 Contains a small function to  check logs files out of UPPMAX
 
+## Drafts
 
+This folder contains coded things that can be useful in the future but they do nothing concrete for now.
 
+For example, the way to code an argument parser in python
