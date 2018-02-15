@@ -95,9 +95,19 @@ def parse_fasta_to_dict(filename,output_format="string"):
 	return fasta_sequences
 
 
-
-
-
+def dict_to_fasta(dict_fasta,filename):
+	''' write a dictionary (dict_fasta) formatted header(key):sequence(value as a string)
+	to a file'''
+	print " write "+filename
+	output = open(filename, "w")
+	for key in dict_fasta.keys():
+		printablekey,printablevalue = key, dict_fasta[key]
+		if not printablekey.startswith(">"): printablekey = ">"+printablekey.strip()+"\n"
+		if not printablekey.endswith("\n"): printablekey = printablekey+"\n"
+		if not printablevalue.endswith("\n"): printablevalue = printablevalue+"\n"
+		output.write(printablekey+printablevalue)
+	output.close()
+		
 def bed_from_fasta(fasta_file="file.fasta",output_file="file.bed"):
 	"""create a bed file with 1 line per sequence in the fasta corresponding to the length of the sequence"""
 	dict_seq = parse_fasta_to_dict(fasta_file,"string")

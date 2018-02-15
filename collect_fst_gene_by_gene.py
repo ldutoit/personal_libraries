@@ -11,7 +11,7 @@ full_dict = {}
 for filename in os.listdir(folder_output):
 	print filename
 	tempdict = vcft.parce_vcftools_fst(folder_output+"/"+filename,exception=True,remove_ext = True)
-	full_dict.update(tempdict)
+	full_dict.update(tempdict) 
 # just make a new dictionnary where keys are actually gene name and nom vcf files
 
 
@@ -35,3 +35,4 @@ for filename in os.listdir(folder_with_list):
 
 output.close()
 
+ 

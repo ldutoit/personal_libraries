@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 #import modules
+from __future__ import print_function
 import argparse
+import sys
+
+#FUNCTIONS
+
+
+
+
+def errprint(*args, **kwargs):
+    ''' print to stderr not stdout'''
+    print(*args, file=sys.stderr, **kwargs)
 
 #parser
 parser = argparse.ArgumentParser() # add the parse
@@ -12,7 +23,4 @@ args = parser.parse_args()	# returns data from the options specified (infile)
 
 
 ## program
-print(args.square**2)	
-
-if args.verbose:
-    print("verbosity turned on")
+errprint("Start")
