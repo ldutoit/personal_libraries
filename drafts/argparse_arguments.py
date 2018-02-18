@@ -6,9 +6,9 @@ import sys
 
 
 
-#Simple argument parser to use as a base when constructing other. Here is a guide:
+#Simple argument parser to use as a base when constructing other. Here are two guides:
+#http://www.pythonforbeginners.com/argparse/argparse-tutorial
 #https://pymotw.com/2/argparse/
-
 
 
 #FUNCTIONS
