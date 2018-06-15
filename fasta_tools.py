@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # Filename: fasta_tools.py
 try:
 	from Bio import SeqIO
@@ -9,10 +9,10 @@ except:
 
 ###put the  the scaffolds in the assembly into a dictionnary 
 
-file_scaf="/proj/b2010010/repos/assembly/fAlb15/linkage/fAlb15.chrom.strict.20140121.txt"
-file_scafall =  "/proj/b2010010/private/Linkage/fAlb15_chromosomes_withIntermediates_FLIPPED_20130221.txt"	#contained unoriented and unlocalised scaffolds
-file_chrom="/proj/b2010010/repos/assembly/fAlb15/fAlb15.chrom.fa"
-scaf_len="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len"
+#file_scaf="/proj/b2010010/repos/assembly/fAlb15/linkage/fAlb15.chrom.strict.20140121.txt"
+#file_scafall =  "/proj/b2010010/private/Linkage/fAlb15_chromosomes_withIntermediates_FLIPPED_20130221.txt"	#contained unoriented and unlocalised scaffolds
+#file_chrom="/proj/b2010010/repos/assembly/fAlb15/fAlb15.chrom.fa"
+#scaf_len="/proj/b2010010/private/assembly/nobackup/ScaffLengths/fAlb15.len"#
 
 class Assembly_scaff(object):
 	"""class to store info on assembly from scaffolds information. needs a file where every line is a scaffold ordered along chromosome with three columns:
@@ -53,28 +53,43 @@ RNA_codon_table = {
 
 
 
+IUPAC_alphabet = 	{"AG" : "R",
+	"GA" : "R",
+	"CT" : "Y",
+	"TC" : "Y",
+	"GC" : "S",
+	"CG" : "S",
+	"AT" : "W",
+	"TA" : "W",
+	"GT" : "K",
+	"TG" : "K",
+	"AC" : "M",
+	"CA" : "M"}
 
-#store info on assembly fAlb15
-fAlb15=Assembly_scaff(file_scaf=file_scaf,file_scafall=file_scafall)
 
 
-dict_scaf_len={}
-with open (scaf_len) as f :
-	for line in f:
-		dict_scaf_len[line.split()[0]]=line.split()[1]
 
-scaffs=0
-total_length=0
-dict_chrom_len={}
-for key in fAlb15.dict_chrom.keys():
-	print key
-	length_chrom=-5000# we add every scaf length_chrom + 5000... need to remove 5000 in the end cause the last scaffold is not followed by 5000 gaps
-	for scaf in fAlb15.dict_chrom[key]:
-		length_chrom += int(dict_scaf_len[scaf]) + 5000
-		scaffs+=1
-	dict_chrom_len[key] = length_chrom
-	total_length+=length_chrom
-#store scaf length for every scaffold in the assembly 
+##store info on assembly fAlb15
+#fAlb15=Assembly_scaff(file_scaf=file_scaf,file_scafall=file_scafall)#
+#
+
+#dict_scaf_len={}
+#with open (scaf_len) as f :
+#	for line in f:
+#		dict_scaf_len[line.split()[0]]=line.split()[1]#
+
+#scaffs=0
+#total_length=0
+#dict_chrom_len={}
+#for key in fAlb15.dict_chrom.keys():
+#	print key
+#	length_chrom=-5000# we add every scaf length_chrom + 5000... need to remove 5000 in the end cause the last scaffold is not followed by 5000 gaps
+#	for scaf in fAlb15.dict_chrom[key]:
+#		length_chrom += int(dict_scaf_len[scaf]) + 5000
+#		scaffs+=1
+#	dict_chrom_len[key] = length_chrom
+#	total_length+=length_chrom
+##store scaf length for every scaffold in the assembly 
 
 
 
@@ -117,7 +132,7 @@ def bed_from_fasta(fasta_file="file.fasta",output_file="file.bed"):
 		output.write(key+"\t0"+"\t"+str(len(dict_seq[key]))+"\n") 
 	output.close()
 
-def exclude_lines_with_scaff(infile,outfile,list_scaff_to_exclude=fAlb15.dict_chrom["ChrZ"],nb_lines_log=10000):
+def exclude_lines_with_scaff(infile,outfile,list_scaff_to_exclude,nb_lines_log=10000):
 	'''exclude lines with scaffolds specified in list_scaff_to_exclude list
 	The scaff can be anywhere in the name'''
 	outf=open(outfile,"wb")
@@ -129,4 +144,7 @@ def exclude_lines_with_scaff(infile,outfile,list_scaff_to_exclude=fAlb15.dict_ch
 			if not any([(to_exclude in line.split(" ")) for to_exclude in list_scaff_to_exclude]):
 				outf.write(line)		
 	outf.close()
+
+
+
 

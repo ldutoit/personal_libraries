@@ -8,7 +8,7 @@ for i in range(0,1000):
 			import numpy as np 
 			import filecmp 
         except :
-            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom\nsh"+str(i))
+            raise Exception  ("could not import the modules required all or some of the functions : pysam\nnumpy\nos\nvcf\nrandom"+str(i))
         break
         
 class WindowBed(object):
