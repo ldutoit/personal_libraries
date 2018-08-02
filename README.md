@@ -26,22 +26,13 @@ Append the folded allele frequency spectrum information line by line to a bed fi
 
 Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic frequency spectrum. The main function is **afs_stats**.
 
-## personal_bincommands
-Contains small bin commands gathered from different places. help is always available with the "-h flag"
-
-
-Many of them are not coded by me. Script:
-
-**vcf2structure.py** convert a vcf to a structure data file
-
-**sortbig_bed_vcf.sh** sort a big bed or vcf file.
-
-**faSplit**  split a fasta file into small files ( developped by UCSC).
-
-**maf_convert.py**  convert multple alignemtne format maf and psl ( developped by UCSC).
+## stand alone scripts
 
 **swap_min_max.py**  used to swap column to have always the first one with the min and the second one with the max.
 
+**vcf2structure.py** convert a vcf to a structure data file
+
+***str2vcfPOP.py** Used to convert a structure file to a populations file for STACKS. Warning: very inadequate for anything else.
 
 ## fasta_tools.py
 
