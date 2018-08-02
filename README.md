@@ -29,7 +29,11 @@ Calculate Tajima's D, theta Watterson and nucleotide diversity from the allelic 
 ## personal_bincommands
 Contains small bin commands gathered from different places. help is always available with the "-h flag"
 
+
 Many of them are not coded by me. Script:
+
+**vcf2structure.py** convert a vcf to a structure data file
+
 **sortbig_bed_vcf.sh** sort a big bed or vcf file.
 
 **faSplit**  split a fasta file into small files ( developped by UCSC).
