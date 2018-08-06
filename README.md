@@ -6,12 +6,13 @@ For any questions, please email dutoit.ludovic@gmail.com
 
 ### stand alone scripts
 
-**swap_min_max.py**  used to swap column to have always the first one with the min and the second one with the max.
+**swap_min_max.py**  Swap column to have always the first one with the min and the second one with the max.
 
 **vcf2structure.py** convert a vcf to a structure data file
 
-***str2vcfPOP.py** Used to convert a structure file to a populations file for STACKS. Warning: very inadequate for anything else.
+**str2vcfPOP.py** Conversion of a structure file to a populations file for STACKS. Warning: very inadequate for anything else.
 
+**PCR_window_design.py** Find windows suitable for amplification in a fasta alignment. Take into account custom primer design conditions.
 
 ### windows_tools.py
 
