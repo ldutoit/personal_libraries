@@ -3,7 +3,7 @@ Haplotype network
 Ludovic Dutoit
 September 9, 2018
 
-This is a toy analysis with uninteresting sequences to set up an easy pipeline for haplotype netweork analysis.
+This is a toy analysis with uninteresting sequences to set up an easy pipeline for haplotype network analysis in R.
 
 I used the code from:
 
