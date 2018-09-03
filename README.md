@@ -14,6 +14,8 @@ For any questions, please email dutoit.ludovic@gmail.com
 
 **PCR_window_design.py** Find windows suitable for amplification in a fasta alignment. Take into account custom primer design conditions.
 
+**haplo_network.md** Little tutorial to run haplotype networks through R.
+
 ### windows_tools.py
 
 Python library that contain tools to work with bedfiles and extract features, include the WindoWBed class to refer to any genomic interval and the Bed files to store windows.
