@@ -84,7 +84,7 @@ At this step we can make the simplest picture of this very simple haplotype netw
 plot(hnet, size = attr(hnet, "freq"), fast = F)
 ```
 
-![](haplo_network_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](figure_cache/unnamed-chunk-4-1.png)
 
 The "freq" attribute makes sure the size of the node is proportional to the frequency of the haplotype.
 
@@ -95,7 +95,7 @@ plot(hnet, size=attr(hnet, "freq"), scale.ratio = 1, cex = 0.8, pie=ind.hap)
 legend("topright", colnames(ind.hap), text.col=rainbow(ncol(ind.hap)), bty = "n")
 ```
 
-![](haplo_network_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](figure_cache/unnamed-chunk-5-1.png)
 
 That is great! But we might be interested in visualising this with colors per populations too. This requires a bit of messing around to replace individual names by population names. and then re compute haplotype frequencies per populations.
 
@@ -147,6 +147,6 @@ plot(hnet, size=attr(hnet, "freq"), scale.ratio = 1, cex = 0.8, pie=new.hap)
 legend("topright", colnames(new.hap), text.col=rainbow(ncol(new.hap)), bty = "n")
 ```
 
-![](haplo_network_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](figure_cache/unnamed-chunk-6-1.png)
 
 NOTE: in this case the haplotype network does not make much sense as it is a completely random alignment quickly generated to create this tutorial.

@@ -1,0 +1,99 @@
+---
+title: "Haplotype network"
+author: "Ludovic Dutoit"
+date: "September 9, 2018"
+output: github_document
+---
+
+This is a toy analysis with uninteresting sequences to set up an easy pipeline for haplotype netweork analysis.
+
+I used the code from:
+
+https://johnbhorne.wordpress.com/2016/09/15/still-making-haplotype-networks-the-old-way-how-to-do-it-in-r/
+
+and 
+
+https://arundurvasula.wordpress.com/2016/02/24/haplotype-networks-in-r/
+
+but I combined them and reorganised a bit.
+
+
+```{r,message=F}
+#Load the libraries
+library("ape")
+library("pegas")
+```
+
+
+For this analysis,we need a fasta file consisting of aligned sequences. Those can be obtained from many tools, including [MAAFT](https://mafft.cbrc.jp/alignment/server/) and [clustal omega](https://www.ebi.ac.uk/Tools/msa/clustalo/). The presented fasta file is [sample_network.fa](https://github.com/ldutoit/personal_libraries/blob/master/test_files/sample_network.fa) in the folder test files in this repository..
+
+
+## Preparing the data and constructing the network
+
+```{r}
+input <- "sample_network.fa" # name of input file
+d <- read.dna(input, format='fasta') # read the aligned fasta file
+e <- dist.dna(d) # make a mtrix of dna distances 
+h <- haplotype(d) # summarize those distances as haplotypes
+h
+
+
+hnet <- haploNet(h) # summarize those haplotypes as a network
+hnet
+
+```
+
+Now that we have the network, let's see which samples correspond which haplotypes
+
+```{r}
+ind.hap	<-with(
+stack(setNames(attr(h, "index"), rownames(h))),
+table(hap=ind, pop=rownames(d)[values])) 
+ind.hap
+```
+
+
+
+## Visualisation
+
+At this step we can make the simplest picture of this very simple haplotype network. 
+
+```{r}
+plot(hnet, size = attr(hnet, "freq"), fast = F)
+```
+
+The "freq" attribute makes sure the size of the node is proportional to the frequency of the haplotype.
+
+We can visualize this with coloring per samples:
+
+```{r}
+plot(hnet, size=attr(hnet, "freq"), scale.ratio = 1, cex = 0.8, pie=ind.hap)
+legend("topright", colnames(ind.hap), text.col=rainbow(ncol(ind.hap)), bty = "n")
+```
+
+
+That is great! But we might be interested in visualising this with colors per  populations too. This requires a bit of messing around to replace individual names by population names. and then re compute haplotype frequencies per populations. 
+
+In your fasta file, make sure that individual names come after population name such as "popA_1" for individual 1 coming from population A.
+
+
+
+```{r}
+#identify locations sample per sample
+populations <- strsplit(as.character( colnames(ind.hap)), "_")
+populations <- sapply(populations, "[[", 1)
+populations
+
+# get a data frame of haplotypes per sample
+df <- as.data.frame(ind.hap)
+unique <- df[df$Freq == 1,]
+unique
+
+#combine locations and haplotypes per population
+new.hap <- table(unique$hap, populations)
+new.hap
+plot(hnet, size=attr(hnet, "freq"), scale.ratio = 1, cex = 0.8, pie=new.hap)
+legend("topright", colnames(new.hap), text.col=rainbow(ncol(new.hap)), bty = "n")
+```
+
+NOTE: in this case the haplotype network does not make much sense as it is a completely random alignment quickly generated to create this tutorial.
