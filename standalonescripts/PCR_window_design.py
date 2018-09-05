@@ -188,7 +188,7 @@ dict_fasta={key:dict_fasta[key][:1440]for key in dict_fasta.keys()}
 len_sequence = len(dict_fasta.values()[0])
 print("The total length after timming of start and end '-' sequence is "+str(len_sequence)+" bp")
 
-#fo window by window from the length of the primer:
+#for window by window from the length of the primer, go through the file
 windows=[]
 for i in range(args.length_primer,len_sequence-args.length_primer-args.length_window):
 	print ("start at", i)
