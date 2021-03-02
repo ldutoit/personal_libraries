@@ -10,7 +10,7 @@ For any questions, please email dutoit.ludovic@gmail.com
 
 **vcf2structure.py** convert a vcf to a structure data file
 
-**str2vcfPOP.py** Conversion of a structure file to a populations file for STACKS. Warning: very inadequate for anything else.
+**str2vcfPOP.py** Conversion of a structure file to a vcf populations file for STACKS. Warning: very inadequate for anything else.
 
 **PCR_window_design.py** Find windows suitable for amplification in a fasta alignment. Take into account custom primer design conditions.
 
