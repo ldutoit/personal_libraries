@@ -1,4 +1,4 @@
- #!/usr/bin/env python 2
+#!/usr/bin/env python 2
 #Filename: afs_stats.py Developped with the help of Paulina Bolivar.
 
 import numpy 
