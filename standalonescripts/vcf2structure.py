@@ -8,8 +8,9 @@ import os
 import vcf # pip install pyVCF
 
 
-# this file convert a vcf file into a structure file
-
+# this file convert a vcf file into a structure file. require pyVCF library.
+## example usage
+#./vcf2structure.py --input YOURVCF.vcf --output YOUROUTPUT.str
 
 #FUNCTIONS
 
