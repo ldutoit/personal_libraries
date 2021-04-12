@@ -3,8 +3,7 @@
 ##Writen by Ludovic Dutoit, April 2021, dutoit.ludovic@gmail.com for any questions
 
 # USAGE EXAMPLE
-# python s
-2vcfPOP.py   INPUT OUTPUT
+# python str2vcfPOP.py   INPUT OUTPUT
 
 
 ##LOAD MODULES
