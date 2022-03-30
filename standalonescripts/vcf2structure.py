@@ -1,4 +1,7 @@
 #!/usr/bin/env python2
+
+## Written by Ludovic Dutoit, improved by Oasis Who
+## Note, one line per individual, 2 columns per locus, set POPDATA and LABEL as one in mainparams
 #import modules
 from __future__ import print_function
 import argparse
@@ -30,7 +33,7 @@ args = parser.parse_args()
 
 
 
-dict_alleles = {"0/0":"11","0/1":"12","1/0":"12","1/1":"22","./.":"-9"}
+dict_alleles = {"0/0":"1\t1","0/1":"1\t2","1/0":"1\t2","1/1":"2\t2","./.":"-9\t-9"}
 
 input_vcf=vcf.Reader(fsock=None, filename=args.input, compressed=False, prepend_chr="False", strict_whitespace=False)#open the vcf parser
 
@@ -41,7 +44,7 @@ gen_dict = {ind:[] for ind in input_vcf.samples }
 
 #store all the genotypes and loci names
 for site in input_vcf:
-	list_snps.append( site.CHROM+"_"+str(site.POS)) # chr_pos
+	list_snps.append( site.CHROM+"_"+str(site.POS)) # chr_pos first allele
 	for i in range(len(gen_dict.keys())):
 		gen_dict[site.samples[i].sample].append(dict_alleles[site.samples[i]["GT"]])
 
@@ -51,5 +54,5 @@ output.write("\t".join(list_snps)+"\n")
 for ind in gen_dict.keys():
 	#print (gen_dict[ind])
 	#print (ind)
-	output.write("\t".join([ind]+gen_dict[ind])+"\n")
+	output.write("\t".join([ind]+[str(1)]+gen_dict[ind])+"\n")
 output.close()
